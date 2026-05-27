@@ -17,6 +17,58 @@
   /* Flowing particles per surface */
   const particles = { preview: [], capture: [], analysis: [] };
 
+  /* ── Zoom / Pan state ──────────────────────────────────── */
+  let zoom = 1, panX = 0, panY = 0;
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 }, panStart = { x: 0, y: 0 };
+  const MIN_ZOOM = 0.25, MAX_ZOOM = 6;
+
+  function resetView() {
+    zoom = 1; panX = 0; panY = 0;
+    canvas.style.cursor = 'grab';
+  }
+
+  function applyZoom(factor, cx, cy) {
+    const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+    const f = next / zoom;        /* factor real tras clamp */
+    panX = cx - f * (cx - panX);
+    panY = cy - f * (cy - panY);
+    zoom = next;
+  }
+
+  /* Rueda del ratón — zoom centrado en el cursor */
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    applyZoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top);
+  }, { passive: false });
+
+  /* Drag para pan */
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStart = { x: e.clientX, y: e.clientY };
+    panStart  = { x: panX, y: panY };
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panX = panStart.x + (e.clientX - dragStart.x);
+    panY = panStart.y + (e.clientY - dragStart.y);
+  });
+  window.addEventListener('mouseup', () => {
+    if (isDragging) { isDragging = false; canvas.style.cursor = 'grab'; }
+  });
+
+  /* Doble clic: resetear vista */
+  canvas.addEventListener('dblclick', resetView);
+
+  /* Botones de zoom en el HTML overlay */
+  document.getElementById('pz-in')   ?.addEventListener('click', () => applyZoom(1.35, W / 2, H / 2));
+  document.getElementById('pz-out')  ?.addEventListener('click', () => applyZoom(1 / 1.35, W / 2, H / 2));
+  document.getElementById('pz-reset')?.addEventListener('click', resetView);
+
   /* ── Resize canvas to container ────────────────────────── */
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
@@ -25,13 +77,13 @@
   }
 
   /* ── Particle factory ──────────────────────────────────── */
-  function spawnParticle(key) {
+  function spawnParticle() {
     return { t: Math.random(), speed: 0.006 + Math.random() * 0.008, alpha: 0 };
   }
 
   function ensureParticles() {
     ['preview', 'capture', 'analysis'].forEach(k => {
-      while (particles[k].length < 6) particles[k].push(spawnParticle(k));
+      while (particles[k].length < 6) particles[k].push(spawnParticle());
     });
   }
 
@@ -62,6 +114,11 @@
     const L = layout();
     frame++;
 
+    /* ── Aplicar transform de zoom/pan ─────────────────── */
+    ctx.save();
+    ctx.translate(panX, panY);
+    ctx.scale(zoom, zoom);
+
     /* --- Sensor --- */
     const pulse = 0.85 + Math.sin(frame * 0.06) * 0.15;
     ctx.save();
@@ -84,7 +141,7 @@
     ctx.font = `${Math.max(7, H * 0.055)}px 'JetBrains Mono', monospace`;
     ctx.fillText('ÓPTICO', L.sensorX, L.sensorY + 14);
 
-    /* --- Main stem sensor → fork (curva suave) --- */
+    /* --- Main stem sensor → fork --- */
     ctx.beginPath();
     ctx.moveTo(L.sensorX + L.sensorR, L.sensorY);
     ctx.lineTo(L.forkX, L.sensorY);
@@ -99,18 +156,15 @@
     ctx.fillStyle = 'rgba(0,240,255,0.6)';
     ctx.fill();
 
-    /* --- FIX ③: 3 ramas con curvas cúbicas suaves desde el punto de bifurcación --- */
+    /* --- 3 ramas con curvas cúbicas suaves --- */
     const keys = ['preview', 'capture', 'analysis'];
-    const endR = H * 0.058; /* radio del círculo final */
-    const labelOffX = endR + 8; /* offset del label respecto al centro del círculo */
+    const endR = H * 0.058;
 
     keys.forEach((key, i) => {
       const s    = SURFACES[key];
       const y    = L.ys[i];
       const actv = s.active;
 
-      /* Curva cúbica: arranque horizontal desde forkX, llega horizontal al endX
-         Los puntos de control crean una S suave */
       const cp1x = L.forkX + (L.endX - L.forkX) * 0.35;
       const cp1y = L.sensorY;
       const cp2x = L.forkX + (L.endX - L.forkX) * 0.55;
@@ -125,7 +179,7 @@
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      /* Círculo endpoint — separado del label */
+      /* Círculo endpoint */
       ctx.save();
       ctx.shadowColor = s.color;
       ctx.shadowBlur  = actv ? 22 : 5;
@@ -138,7 +192,7 @@
       ctx.stroke();
       ctx.restore();
 
-      /* Label a la DERECHA del círculo, no encima */
+      /* Label a la derecha del círculo */
       const lx = L.endX + endR + 10;
       ctx.textAlign   = 'left';
       ctx.fillStyle   = actv ? s.color : 'rgba(255,255,255,0.25)';
@@ -148,7 +202,7 @@
       ctx.font        = `${Math.max(7, H * 0.047)}px 'JetBrains Mono', monospace`;
       ctx.fillText(s.sub, lx, y + 10);
 
-      /* Partículas viajando por la curva cúbica */
+      /* Partículas */
       if (actv) {
         particles[key].forEach(p => {
           p.t     = (p.t + p.speed) % 1;
@@ -169,7 +223,21 @@
       }
     });
 
-    /* Surface card meters */
+    /* ── Restaurar transform (fuera del zoom) ───────────── */
+    ctx.restore();
+
+    /* Indicador de nivel de zoom (HUD — no se transforma) */
+    if (Math.abs(zoom - 1) > 0.05) {
+      const zoomLabel = `${Math.round(zoom * 100)}%`;
+      ctx.save();
+      ctx.font = `bold 11px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(0,240,255,0.55)';
+      ctx.fillText(zoomLabel, W - 8, H - 8);
+      ctx.restore();
+    }
+
+    /* Surface card meters (DOM — fuera del transform de canvas) */
     keys.forEach(key => {
       const fill = document.querySelector(`.surf-card[data-surface="${key}"] .surf-fill`);
       if (!fill) return;
@@ -239,11 +307,12 @@
     }
   });
 
-  /* ── Slide enter ───────────────────────────────────────── */
+  /* ── Slide enter / leave ───────────────────────────────── */
   document.addEventListener('caminside:slide', ({ detail }) => {
     if (detail.index === 5) {
       resizeCanvas();
       ensureParticles();
+      resetView();           /* resetear zoom cada vez que se entra a la slide */
       if (!raf) draw();
       startStream();
     } else {
@@ -256,5 +325,6 @@
   // caminside:slide para que el canvas loop no corra desde el inicio de la sesión.
   resizeCanvas();
   ensureParticles();
+  canvas.style.cursor = 'grab';
 
 })();

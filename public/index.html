@@ -219,6 +219,12 @@
       </header>
       <div class="pipeline-layout">
         <canvas id="pipeline-canvas"></canvas>
+        <!-- Zoom controls overlay — posicionados en la esquina superior derecha del canvas -->
+        <div class="pipeline-zoom-ctrl">
+          <button id="pz-in"    title="Acercar (también rueda ↑)">+</button>
+          <button id="pz-reset" title="Restablecer vista (doble clic en el canvas)">⊙</button>
+          <button id="pz-out"   title="Alejar (también rueda ↓)">−</button>
+        </div>
         <div class="surface-row">
           <div class="surf-card" data-surface="preview">
             <div class="surf-glow" style="--gc:#eab308"></div>
