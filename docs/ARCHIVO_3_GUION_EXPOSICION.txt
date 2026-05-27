@@ -1,0 +1,231 @@
+================================================================================
+DOCUMENTO 3: GUIÓN PROFESIONAL DE EXPOSICIÓN CON ANOTACIONES DE PRODUCCIÓN
+PROYECTO: "CAMINSIDE" - PRESENTACIÓN DEL GRUPO DE 7 INTEGRANTES
+================================================================================
+
+NOTAS DE PRODUCCIÓN Y CONTROL TÉCNICO:
+* [VISTA WEB]: Indica el estado de la diapositiva web interactiva Reveal.js.
+* [ACCIÓN EN VIVO]: Movimiento exacto que el expositor realiza con el teléfono.
+* [TIEMPO ESTABLECIDO]: Máximo 2:30 a 3:00 minutos por integrante.
+
+--------------------------------------------------------------------------------
+INTEGRANTE 1: INTRODUCCIÓN Y ARQUITECTURA DE CAPAS (SISTEMA OPERATIVO MÓVIL)
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 00:00 - 02:30
+[VISTA WEB]: Portada formal. Al presionar espacio, aparece un diagrama de capas
+            vertical (App, Framework, HAL, Driver, Kernel) animado en CSS.
+[ACCIÓN EN VIVO]: Sostiene el teléfono móvil real en alto. Abre la aplicación 
+                  en la "Pestaña 1: Arquitectura HAL".
+
+[DISCURSO]:
+    "Buenos días, compañeros e ingeniero. Hoy vamos a analizar la arquitectura de 
+    software que gobierna uno de los componentes de hardware más complejos de los 
+    dispositivos móviles: la cámara. 
+
+    Cuando abrimos una aplicación que requiere captura de imagen, el flujo de 
+    órdenes debe viajar a través de una serie de capas estrictas dentro del sistema 
+    operativo. Como pueden observar en nuestra presentación web interactiva, este 
+    viaje inicia en la Capa de Aplicación, que aloja nuestro código fuente. 
+
+    Sin las abstracciones correctas, tendríamos que programar un código diferente 
+    para cada uno de los miles de sensores ópticos del mercado. Para resolver esto, 
+    el framework del sistema operativo se comunica con la HAL, o Hardware 
+    Abstraction Layer. La HAL es una interfaz estándar que unifica el comportamiento 
+    del hardware, actuando como un traductor universal para que las capas de alto 
+    nivel ignoren si el lente físico fue fabricado por Sony u OmniVision. 
+
+    Miren nuestra consola web en tiempo real: al activar la primera pestaña en mi 
+    teléfono físico, la aplicación realiza una llamada al 'CameraManager' y extrae 
+    el nivel de soporte de la HAL de este dispositivo. El log transmitido vía 
+    WebSockets muestra que contamos con un nivel 'HARDWARE_LEVEL_3', garantizando 
+    que nuestro software tiene acceso completo a los flujos y llamadas de memoria 
+    más profundos del hardware óptico."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 2: EL PIPELINE DEL ISP (IMAGE SIGNAL PROCESSOR) Y POSTPROCESAMIENTO
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 02:30 - 05:00
+[VISTA WEB]: Un modelo 3D hecho en Three.js que representa la placa base de un 
+            teléfono. Se ilumina en rojo el procesador (SoC) y se despliega una 
+            matriz de color de Bayer transformándose a RGB.
+[ACCIÓN EN VIVO]: Pasa a la "Pestaña 2: Control ISP" en la app móvil. Manipula 
+                  un control deslizante (slider) de balance de blancos.
+
+[DISCURSO]:
+    "Muchas gracias. Ahora bien, los datos extraídos directamente por la capa HAL 
+    son flujos eléctricos crudos y oscuros conocidos como formato RAW. Un sensor por 
+    sí solo no comprende el color real; solo mide la intensidad de fotones. Aquí 
+    entra en escena el cerebro oculto de la cámara: el ISP, o Image Signal Processor, 
+    un coprocesador especializado empaquetado dentro del SoC del smartphone.
+
+    El ISP ejecuta de forma asíncrona un flujo de algoritmos denominado 'Pipeline 
+    de Imagen'. El primer paso crítico es el 'Demosaicing', un proceso matemático 
+    que interpola los valores cromáticos de la Matriz de Bayer del hardware para 
+    asignarle a cada píxel su verdadero color RGB. Posteriormente, aplica rutinas 
+    de reducción de ruido digital y balance de blancos.
+
+    Podemos comprobar esto en nuestra demostración en tiempo real. Observen la 
+    proyección: al desplazar el slider de balance de blancos en el móvil, nuestro 
+    software interrumpe los cálculos automáticos del ISP e inyecta valores de 
+    temperatura manuales directo a los drivers del sensor. Esto nos demuestra que 
+    lo que vemos en la pantalla no es la realidad óptica directa, sino una 
+    interpretación algorítmica procesada en milisegundos por el software del ISP."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 3: EVOLUCIÓN DE LAS APIS DE DESARROLLO (CAMERA2 VS CAMERAX)
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 05:00 - 07:30
+[VISTA WEB]: Pantalla dividida en dos bloques de código Kotlin. El izquierdo muestra 
+            la enorme complejidad asíncrona de Camera2; el derecho expone el 
+            enfoque declarativo y limpio de CameraX basado en Casos de Uso.
+[ACCIÓN EN VIVO]: Pasa a la "Pestaña 3: Configuración de APIs" en la app. Al hacer 
+                  clic en un botón, la cámara se inicializa instantáneamente.
+
+[DISCURSO]:
+    "Comprendido el flujo del hardware y el ISP, pasemos al plano del desarrollador: 
+    ¿cómo controlamos esto a través del código en nuestra materia de programación móvil? 
+    En el ecosistema Android, el desarrollo de cámaras ha vivido una evolución compleja. 
+
+    La API primitiva 'Camera1' quedó obsoleta por su falta de control técnico. Luego, 
+    Google lanzó 'Camera2', una API de bajísimo nivel sumamente potente pero propensa 
+    a errores de concurrencia, que requería más de 300 líneas de código asíncrono y 
+    complejo solo para abrir el lente. Para solucionar este dolor de cabeza en la 
+    industria, se creó Jetpack CameraX en Android y AVCaptureSession dentro del 
+    framework AVFoundation en el caso de iOS.
+
+    CameraX introduce una arquitectura guiada por 'Casos de Uso'. Como se aprecia en 
+    el código de nuestra diapositiva, en lugar de gestionar hilos de ejecución manuales, 
+    declaramos tres objetos abstractos independientes: un caso de 'Preview' para ver la 
+    imagen, un caso de 'ImageCapture' para guardar fotos, y un caso de 'ImageAnalysis' 
+    para analizar datos. El framework se encarga de traducir estas declaraciones en 
+    llamadas eficientes a la HAL profunda, reduciendo el código en un 80% y garantizando 
+    estabilidad entre fabricantes."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 4: GESTIÓN CONTROLADA DEL CICLO DE VIDA (LIFECYCLE) Y RECURSOS
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 07:30 - 10:00
+[VISTA WEB]: Gráfico dinámico del ciclo de vida de una Activity (onCreate, onResume, 
+            onPause, onDestroy) conectado a la consola de WebSockets en vivo.
+[ACCIÓN EN VIVO]: Pestaña 4 activa. El expositor bloquea el teléfono en vivo 
+                  presionando el botón físico y luego lo desbloquea.
+
+[DISCURSO]:
+    "Un aspecto fundamental en la ingeniería de software móvil es que la cámara es 
+    un recurso físico exclusivo. Dos aplicaciones no pueden controlar el sensor de 
+    manera simultánea. Por ende, una mala gestión del código puede bloquear el 
+    hardware, agotar la batería del usuario o provocar un colapso total de la app.
+
+    Para evitarlo, nuestro software debe acoplarse estrictamente al ciclo de vida del 
+    sistema operativo. Observen detalladamente la terminal de nuestra diapositiva web. 
+    En este momento la cámara está transmitiendo datos en la app móvil. Presten atención 
+    a lo que ocurre cuando bloqueo físicamente el teléfono: [Bloquea el móvil]. 
+
+    El sistema operativo dispara inmediatamente el método asíncrono 'onPause()'. 
+    Nuestro código intercepta ese evento y corta los hilos de comunicación de CameraX, 
+    liberando el hardware para que el sistema u otras aplicaciones dispongan de él. Al 
+    desbloquear el dispositivo: [Desbloquea el móvil], la Activity ejecuta 'onResume()' 
+    y el software vuelve a solicitar el acceso a la sesión de captura de forma limpia 
+    y transparente para el usuario, demostrando un uso óptimo de la memoria volátil."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 5: EL PIPELINE DE CAPTURA SIMULTÁNEA (PIPELINE SURFACES)
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 10:00 - 12:30
+[VISTA WEB]: Animación interactiva en Canvas donde un canal de datos central se 
+            divide limpiamente en tres flujos gráficos paralelos e independientes.
+[ACCIÓN EN VIVO]: Pestaña 5 activa. Captura una fotografía rápida del público.
+
+[DISCURSO]:
+    "Una vez establecida una sesión de cámara estable y vinculada al ciclo de vida, 
+    el framework opera mediante un modelo de entradas y salidas concurrentes a través 
+    de estructuras de memoria gráfica llamadas 'Surfaces'. 
+
+    En programación móvil, una sola entrada de la cámara no se limita a un único 
+    destino. Mediante el uso de multihilos por debajo de CameraX, el software es capaz 
+    de duplicar y desviar el flujo de píxeles hacia tres Surfaces paralelas sin perder 
+    tasa de refresco en la interfaz de usuario:
+
+    La primera es la 'Preview Surface', un flujo constante que envía tramas a la GPU 
+    usando buffers de textura optimizados a 30 o 60 cuadros por segundo para que el 
+    usuario apunte correctamente. La segunda es la 'Image Capture Surface'; cuando 
+    presioné el botón de captura hace un instante, el software congeló un único frame 
+    en su máxima resolución nativa y disparó un hilo secundario de escritura para 
+    comprimirlo y guardarlo en el almacenamiento masivo. Y la tercera es la 'Image 
+    Analysis Surface', que desvía arreglos de bytes puros a la memoria RAM, abriendo la 
+    puerta al procesamiento de datos en tiempo real que veremos a continuación."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 6: INTEGRACIÓN DE APPS DE TERCEROS Y LA API DE EXTENSIONES
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 12:30 - 15:00
+[VISTA WEB]: Un diagrama de flujo que compara el método antiguo de captura de 
+            pantalla (Screenshot del preview) vs el acceso nativo con Extensiones.
+[ACCIÓN EN VIVO]: Pestaña 6 activa. Alterna entre el botón de "Captura por Preview" 
+                  y el botón de "Activación de Extensión Nativa".
+
+[DISCURSO]:
+    "Como futuros ingenieros, debemos analizar un problema clásico del desarrollo 
+    móvil: ¿por qué las fotos en aplicaciones de terceros como Instagram, WhatsApp o 
+    TikTok históricamente se veían con menor calidad en Android en comparación con la 
+    aplicación nativa del teléfono?
+
+    Esto no era un fallo del hardware, sino una decisión de diseño de software para 
+    mitigar la fragmentación. Para asegurar que la app no crasheara en miles de modelos 
+    diferentes, los programadores de estas suites tomaban el camino más genérico: 
+    hacían una captura de pantalla digital de la 'Preview Surface', descartando todo el 
+    procesamiento avanzado del ISP de la marca.
+
+    Hoy en día, la solución técnica correcta es la implementación de la API de 
+    Extensiones de CameraX. Como pueden ver en nuestro proyecto, al activar el modo 
+    de extensión nativa en la Pestaña 6, nuestra aplicación le exige al sistema operativo 
+    que exponga e invoque los algoritmos propietarios del fabricante (como el Modo Noche 
+    o el HDR avanzado). Esto permite que nuestro desarrollo capture imágenes con la 
+    misma calidad computacional de la aplicación oficial del sistema de fábrica."
+
+--------------------------------------------------------------------------------
+INTEGRANTE 7: VISIÓN POR COMPUTADORA Y PROCESAMIENTO EN LA PERIFERIA (EDGE)
+--------------------------------------------------------------------------------
+[TIEMPO ESTABLECIDO]: 15:00 - 18:00
+[VISTA WEB]: El clímax técnico. La diapositiva web se convierte en una terminal 
+            que despliega las coordenadas exactas y el string del código de barra 
+            o rostro que lee la cámara del teléfono en vivo por WebSockets.
+[ACCIÓN EN VIVO]: Pestaña 7 activa. Apunta la cámara del móvil hacia un código QR 
+                  impreso o proyectado en el salón de clases.
+
+[DISCURSO]:
+    "Llegamos al punto culminante de la exposición, donde el stream de software de la 
+    cámara se fusiona con la Inteligencia Artificial y el procesamiento local. ¿Cómo 
+    analizamos una imagen en tiempo real frame a frame sin agotar la memoria RAM o 
+    congelar la interfaz del smartphone?
+
+    La respuesta clave está en la optimización del formato de color de los datos. El 
+    caso de uso 'ImageAnalysis' de CameraX extrae los buffers de la Surface en un 
+    formato de bajo nivel denominado 'YUV_420_888'. A diferencia del formato RGB común, 
+    que procesa de manera pesada tres canales de color idénticos, YUV separa de forma 
+    eficiente la luminancia (la 'Y' o brillo) de la crominancia (la 'U' y 'V' que dan el 
+    color). Al procesar modelos de visión por computadora, la IA solo necesita el canal 
+    de luminancia para identificar formas y texturas, reduciendo el peso de la matriz de 
+    datos a la mitad.
+
+    Observen la pantalla de nuestra presentación en este instante: al apuntar la cámara 
+    de mi teléfono hacia el código QR, el buffer YUV es procesado en un hilo de fondo 
+    dedicado por los algoritmos de detección periférica de Google ML Kit. El resultado es 
+    empaquetado en un objeto JSON y enviado asíncronamente por WebSockets a nuestro 
+    servidor Node.js local, actualizando la diapositiva web en milisegundos con los datos 
+    del QR detectado. Esto demuestra el verdadero potencial de la cámara móvil cuando se 
+    le trata no solo como un visor óptico, sino como una entrada de datos de alto 
+    rendimiento para la ingeniería de sistemas. Muchas gracias."
+
+--------------------------------------------------------------------------------
+FUENTES BIBLIOGRÁFICAS RECOMENDADAS PARA CONSULTA TÉCNICA
+--------------------------------------------------------------------------------
+1. Google Developers (2024). "Jetpack CameraX Architecture and Core Concepts". 
+   Android Open Source Project. Disponible en la documentación oficial de Android.
+2. Apple Inc. (2025). "AVFoundation Framework - Capturing Media from Input Devices". 
+   Apple Developer Documentation.
+3. Socket.io Team (2025). "Handling Real-Time Bi-directional Data Streams with 
+   WebSockets and Node.js". Documentación técnica oficial de Socket.io.
+4. J. Edward (2023). "Android Camera2 API and the Hardware Abstraction Layer Design". 
+   Embedded Systems Journal, Vol 45.
+================================================================================
