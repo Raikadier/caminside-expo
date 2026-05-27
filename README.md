@@ -114,131 +114,451 @@ Cuando el servidor corre, la consola muestra cada evento en tiempo real:
 
 ## Descripción de cada slide
 
+> **Cómo leer esta sección:** Cada slide tiene un desglose visual de todos los elementos que aparecen en pantalla, explicado como si fuera la primera vez que lo ves. Si eres el presentador de ese slide, lee esto antes de la expo para saber exactamente qué señalar y qué significa cada cosa.
+
+### Elementos globales (presentes en todos los slides)
+
+Antes de entrar a cada slide, hay elementos que siempre están visibles:
+
+**① Iris de diafragma** (transición al cambiar de slide)
+Cada vez que se cambia de slide, una animación en negro se abre desde el centro de la pantalla hacia afuera — como el diafragma físico de una lente de cámara abriéndose. Un anillo cyan se expande simultáneamente. Dura 0.55 segundos. No requiere acción del presentador, ocurre sola.
+
+**② Stat Card** (aparece 2.5 segundos al entrar en slides 1–7)
+Una pantalla negra con un número gigante ocupa toda la pantalla brevemente al entrar en cada sección. Es el dato más impactante del tema. Desaparece sola. Ver tabla:
+
+| Slide | Número | Significado |
+|---|---|---|
+| 1 — HAL | **5** | Capas de software entre tu código y el silicio |
+| 2 — ISP | **47** | Algoritmos ejecutados por cada foto que tomas |
+| 3 — APIs | **−87%** | Reducción de código: Camera2 vs CameraX |
+| 4 — Lifecycle | **4** | Estados que controlan si la cámara vive o muere |
+| 5 — Pipeline | **3** | Hilos simultáneos, cero conflictos |
+| 6 — Extensions | **3.4×** | Mejora de calidad con la API nativa |
+| 7 — ML Kit | **50ms** | Latencia de IA sin internet |
+
+**③ HUD de conexión** (esquina superior derecha, siempre visible)
+Pequeña pastilla con un punto de color y texto:
+- Punto **gris** + "Conectando..." → servidor iniciando
+- Punto **verde** + "1 móvil conectado" → todo listo para la demo
+- Punto **verde** + latencia en ms (ej: `7ms`) → muestra el tiempo real de la conexión WebSocket, en verde si es rápida, amarillo si es lenta, rojo si hay problema
+- `· N en sala` → cuántas personas del público abrieron `/audience` en su teléfono
+
+**④ Badge de integrante** (esquina superior izquierda, slides 1–7)
+Pequeña pastilla que dice `INT. 1`, `INT. 2`, etc. — indica qué integrante está presentando en este slide. Es solo visual, no tiene función técnica.
+
+---
+
 ### Slide 0 — Portada
 
-Pantalla de bienvenida con el nombre de la exposición, institución y una consola que muestra en vivo cuando el dispositivo móvil se conecta.
+Pantalla de presentación. No hay acción requerida del presentador — es la pantalla de espera mientras el público entra y el sistema se conecta.
 
-**Elementos en pantalla:**
-- Título animado con efecto scanline
-- Pillares temáticos: HAL · ISP · CameraX · ML Kit
-- Consola `telemetria@caminside` que registra la conexión del móvil
+**Layout:** todo centrado verticalmente en la pantalla.
+
+**Elementos de arriba a abajo:**
+
+```
+Universidad Popular del Cesar · Ingeniería de Sistemas · Programación Móvil · Mayo 2026
+────────────────────────────────────────────────────────────────────────────────────────
+                    CÁMARA ANDROID
+                    Bajo el Capó
+                ── scanline animada ──
+      Del silicio al widget — cómo Android orquesta cada fotón...
+────────────────────────────────────────────────────────────────────────────────────────
+   🔌 HAL · Driver Stack  |  ⚡ ISP · Bayer  |  📷 CameraX  |  🤖 ML Kit
+────────────────────────────────────────────────────────────────────────────────────────
+  ┌─ telemetria@caminside ─────────────────────────────────────────────┐
+  │ $ ./start_caminside.sh                                             │
+  │ > Iniciando servidor de telemetría en LAN...                       │
+  │ > Dispositivo móvil conectado — sistema listo ✓  (aparece al conectar)│
+  └────────────────────────────────────────────────────────────────────┘
+             Grupo de Exposición N° 2 · 7 Integrantes
+                                             ┌──────────┐
+                                             │  ▓▓ QR ▓▓│  ← SEGUIR EN VIVO
+                                             │  ▓▓ QR ▓▓│
+                                             └──────────┘
+```
+
+- **Título "CÁMARA ANDROID"** — las letras tienen un degradado de blanco a cyan; "ANDROID" tiene degradado de cyan a morado.
+- **Línea scanline** — una línea horizontal cyan que recorre el título de arriba a abajo en bucle. Simula el barrido de un sensor.
+- **Los 4 pilares** (chips horizontales en una pastilla) — resumen los 4 temas de la expo: HAL, ISP, CameraX, ML Kit. Son decorativos pero útiles para presentar el índice.
+- **Consola terminal** (caja oscura con puntitos rojo/amarillo/verde) — simula una terminal de Unix. Cuando la app móvil se conecta, aparece la línea verde de confirmación. Si no aparece, el sistema no está conectado.
+- **QR en esquina inferior derecha** — generado automáticamente con la IP de la red local. Apuntando a `/audience`. El público puede escanearlo con su teléfono para seguir la presentación en vivo.
+
+---
 
 ### Slide 1 — Arquitectura HAL
+**Stat Card al entrar: `5` — capas de software entre tu código y el silicio**
 
-Explica las 5 capas del sistema de cámara Android:
+**Concepto central:** Hay 5 capas de abstracción de software entre el código de la app y el sensor físico. Sin ellas, habría que escribir código diferente para cada uno de los miles de sensores del mercado.
+
+**Layout:** dos columnas.
 
 ```
-┌─────────────────────────────┐
-│  Application Layer          │  Flutter · Widget Tree
-├─────────────────────────────┤
-│  Framework / SDK Layer      │  camera package · Platform Channel
-├─────────────────────────────┤
-│  HAL (Hardware Abstraction) │  android.hardware.camera.provider@2.7
-├─────────────────────────────┤
-│  Kernel Driver Layer        │  V4L2 · DMA Buffers · IRQ
-├─────────────────────────────┤
-│  Linux Kernel / Hardware    │  CMOS Sensor · ISP · MIPI CSI-2
-└─────────────────────────────┘
+┌─────────────────────────────┬──────────────────────────────────────┐
+│  COLUMNA IZQUIERDA           │  COLUMNA DERECHA                      │
+│  (stack de 5 capas)          │  (panel activo + terminal)            │
+│                              │                                        │
+│  ┌──────────────────────┐   │  ┌─ CAPA ACTIVA ──────────────────┐  │
+│  │ 🟣 Application Layer │←  │  │ Application Layer              │  │
+│  ├──────────────────────┤   │  │ Flutter · Widget Tree          │  │
+│  │ 🔵 Framework / SDK   │   │  └────────────────────────────────┘  │
+│  ├──────────────────────┤   │                                        │
+│  │ 🟡 HAL               │   │  ┌─ CameraManager · HAL ─────────┐  │
+│  ├──────────────────────┤   │  │ focal_length: 4.2mm           │  │
+│  │ 🔴 Kernel Driver     │   │  │ aperture: f/1.8               │  │
+│  ├──────────────────────┤   │  │ nivel_soporte: HARDWARE_LEVEL_3│  │
+│  │ ⚪ Linux / Hardware  │   │  │ camera_count: 3               │  │
+│  └──────────────────────┘   │  └────────────────────────────────┘  │
+└─────────────────────────────┴──────────────────────────────────────┘
 ```
 
-**Interactividad en vivo:**
-- Cuando el presentador toca una capa en la app, esa capa se ilumina en la diapositiva con el color correspondiente
-- Cuando la app lee las características del `CameraManager`, aparecen en el log: focal length, apertura, número de cámaras, orientación del sensor, resolución de preview
+**Elementos explicados:**
 
-**Sin app conectada:** las capas se activan automáticamente en secuencia cada 1.8 segundos.
+- **Stack de 5 capas (izquierda)** — cada caja es una capa del sistema operativo. Cada una tiene un color distinto. Cuando se activa, se ilumina con un borde brillante y efecto de glow. Se pueden activar con la app o solas automáticamente.
+  - `Application Layer` — donde vive tu código Flutter. El widget que muestra el preview.
+  - `Framework / SDK Layer` — el plugin `camera` de Flutter + Platform Channel. Traduce llamadas Dart a código nativo Android.
+  - `HAL (Hardware Abstraction Layer)` — la interfaz estándar de Google. Define el contrato entre el framework y el hardware. Versión actual: `android.hardware.camera.provider@2.7`.
+  - `Kernel Driver Layer` — drivers del kernel Linux. Usa V4L2 (Video for Linux 2) para comunicarse con el sensor. DMA Buffers para transferencia de datos sin pasar por CPU.
+  - `Linux Kernel / Hardware` — el sensor físico CMOS, el ISP y el bus de datos MIPI CSI-2 que conecta el sensor al SoC.
+
+- **Panel "CAPA ACTIVA" (derecha arriba)** — muestra el nombre y descripción de la capa que está seleccionada en ese momento. Cambia cuando el presentador toca una capa en la app.
+
+- **Terminal "CameraManager · HAL Characteristics" (derecha abajo)** — cuando la app abre el tab HAL, consulta el `CameraManager` del sistema y emite los datos reales del hardware. El log muestra datos como `focal_length: 4.2mm`, `aperture: f/1.8`, `nivel_soporte: HARDWARE_LEVEL_3`, `camera_count: 3`. Estos son datos del teléfono físico, no inventados.
+
+**Comportamiento automático:** sin app conectada, las capas se iluminan en secuencia de arriba a abajo cada 1.8 segundos en bucle. La demo sigue funcionando.
+
+**Interactividad con la app:**
+- Tocar una capa en el tab HAL → esa capa se ilumina en la diapositiva
+- El botón de leer características → el log se llena con datos del hardware real
+
+---
 
 ### Slide 2 — ISP (Image Signal Processor)
+**Stat Card al entrar: `47` — algoritmos ejecutados por cada foto**
 
-Visualiza el procesamiento de imagen desde el sensor RAW hasta el píxel final.
+**Concepto central:** El sensor solo capta intensidad de luz. El ISP convierte esos datos crudos (RAW) en una imagen de color real mediante una cadena de algoritmos ejecutados en milisegundos.
 
-**Elementos:**
-- Modelo 3D de cámara (Three.js WebGL) con etiquetas didácticas animadas: Sistema Óptico · Sensor CMOS · ISP/SoC · PCB
-- Cuadrícula Bayer 8×8 con el patrón RGGB coloreado
-- 4 pasos del pipeline que se activan en bucle: `Demosaicing → Noise Reduction → White Balance → Tonemapping`
-- Slider de Balance de Blancos (2500K – 8000K)
-- Muestra de color de salida en función de la temperatura
+**Layout:** dos columnas.
 
-**Interactividad en vivo:**
-- El slider de la app (tab ISP) mueve el slider en la diapositiva en tiempo real
-- Los colores de la cuadrícula Bayer y el modelo 3D cambian según la temperatura de color
+```
+┌─────────────────────────────┬──────────────────────────────────────┐
+│  COLUMNA IZQUIERDA           │  COLUMNA DERECHA                      │
+│  (modelo 3D con etiquetas)   │  (Bayer + WB + terminal)              │
+│                              │                                        │
+│     Sistema Óptico ←──●      │  SENSOR RAW · Patrón de Bayer         │
+│                   ╲          │  ┌──────────────────────────────┐    │
+│     [ MODELO 3D   ]          │  │ R G R G R G R G              │    │
+│     [ ROTANDO     ]          │  │ G B G B G B G B  (8×8 grid) │    │
+│                ╲             │  │ R G R G R G R G              │    │
+│       ●── Sensor CMOS        │  └──────────────────────────────┘    │
+│                              │  Demosaicing→NR→White Balance→Tone   │
+│     ISP · SoC ──────●        │  ┌──────────────┐ ■ Output 5500K    │
+│                              │  │ slider WB    │ ❄────────────☀    │
+│       ●── PCB                │  └──────────────┘                    │
+│                              │  ┌─ ISP Pipeline log ──────────────┐ │
+│  Módulo 3D · Three.js WebGL  │  │ [12:34:05] WB ajustado: 5500K  │ │
+└─────────────────────────────┴──────────────────────────────────────┘
+```
+
+**Elementos explicados:**
+
+- **Modelo 3D (izquierda)** — renderizado WebGL en tiempo real de los componentes físicos de una cámara despiezada. Rota lentamente de izquierda a derecha para que se vean todos los ángulos. Los componentes son:
+  - **Lentes de vidrio** (cilindros azul translúcido apilados) — el sistema óptico que enfoca la luz sobre el sensor.
+  - **Anillos negros** entre las lentes — el barril mecánico que sostiene las lentes.
+  - **Placa rectangular delgada** en el centro — el sensor de imagen CMOS. Tiene una cuadrícula de líneas cyan tenues que representa los píxeles.
+  - **Chip cuadrado oscuro** debajo del sensor — el ISP/SoC. Cuando se activa el pipeline (al entrar al slide), brilla con luz cyan pulsante.
+  - **Placa verde oscura** más grande al fondo — la PCB (placa de circuito). Tiene trazas de circuito dibujadas.
+  - **Partículas cyan** que caen desde las lentes hacia el sensor — representan los fotones viajando por el sistema óptico. Solo aparecen cuando el pipeline ISP está activo.
+
+- **Etiquetas didácticas** (texto flotante con líneas punteadas) — 4 etiquetas conectadas a partes del modelo 3D mediante líneas punteadas cyan. Siguen al modelo cuando rota. Alternadas derecha/izquierda para no solaparse:
+  - **Sistema Óptico** (derecha) — señala el conjunto de lentes
+  - **Sensor CMOS** (izquierda) — señala la placa del sensor
+  - **ISP · SoC** (derecha) — señala el chip procesador
+  - **PCB** (izquierda) — señala la placa base
+
+- **Cuadrícula Bayer 8×8 (derecha arriba)** — representa el patrón de filtros de color que cubre el sensor físico. Cada cuadrado es un píxel del sensor con su filtro:
+  - **R** (rojo) — píxeles con filtro rojo
+  - **G** (verde) — hay el doble de píxeles verdes porque el ojo humano es más sensible al verde
+  - **B** (azul) — píxeles con filtro azul
+  - Los colores cambian en tiempo real cuando se mueve el slider de temperatura.
+
+- **Pipeline de 4 pasos** (debajo de la cuadrícula) — los pasos se iluminan en secuencia en bucle mientras el slide está activo:
+  - `Demosaicing` — interpola el valor de color de cada píxel usando los vecinos del patrón Bayer. Sin este paso, la imagen se vería como un mosaico de puntos R/G/B.
+  - `Noise Reduction` — elimina el ruido electrónico del sensor, especialmente visible en fotos nocturnas.
+  - `White Balance` — ajusta los canales de color para que los blancos se vean blancos independientemente de la fuente de luz.
+  - `Tonemapping` — comprime el rango dinámico del HDR del sensor al rango visible de la pantalla.
+
+- **Slider de Balance de Blancos** (debajo del pipeline) — va de 2500K (frío, tonos azules) a 8000K (cálido, tonos dorados). Controlable desde la app o manualmente en la diapositiva. Al moverlo, cambia simultáneamente: los colores de la cuadrícula Bayer, la iluminación del modelo 3D, y el swatch de color de salida.
+
+- **Swatch de color de salida** — un cuadrado de color que muestra exactamente el tono de blanco que produciría el ISP a la temperatura seleccionada. A 5500K (luz día) es blanco neutro; a 2500K es muy azul; a 8000K es muy cálido/dorado.
+
+- **Terminal ISP** — log de eventos: cada vez que se ajusta el balance de blancos (desde la app o el slider), aparece una línea con el timestamp y el valor.
+
+**Interactividad con la app:** mover el slider en el tab ISP del teléfono mueve el slider en la diapositiva en tiempo real y todo cambia simultáneamente.
+
+---
 
 ### Slide 3 — APIs de Cámara
+**Stat Card al entrar: `−87%` — menos código con CameraX**
 
-Compara dos enfoques de acceso a la cámara en Android:
+**Concepto central:** La evolución de las APIs de cámara en Android. Camera2 era potente pero extremadamente verbosa. CameraX simplificó la misma funcionalidad en una fracción del código.
 
-| Métrica | Platform Channel (Camera2) | Flutter Camera Package |
-|---|---|---|
-| Líneas de código | ~280 | ~35 |
-| Tiempo de inicialización | ~1020ms | ~74ms |
-| Ahorro | — | −87% código |
+**Layout:** barra de estadísticas arriba + dos columnas de código + fila inferior.
 
-**Elementos:**
-- Dos columnas de código (`camera2` nativo vs Flutter package)
-- Botón "Simular inicialización" → animación de barras de progreso comparativa
-- Terminal con los tiempos medidos
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ~280  Platform Channel        →    ~35  Camera Package    −87%      │
+│  (chip rojo)                       (chip verde)          (chip cyan) │
+├──────────────────────┬───┬──────────────────────────────────────────┤
+│  Platform Channel    │   │  Flutter Camera Package v0.10+            │
+│  · Camera2 nativo    │VS │  (código limpio)                          │
+│                      │   │                                            │
+│  [código largo con   │   │  [código corto con                        │
+│   muchas líneas      │   │   pocas líneas bien                       │
+│   complejas]         │   │   organizadas]                            │
+│                      │   │                                            │
+├──────────────────────┴───┴──────────────────────────────────────────┤
+│  [▶ Simular inicialización]  ┌─ Comparativa de inicialización ──────┐│
+│                              │  Camera2: ████████████████ 1020ms    ││
+│                              │  CameraX: █ 74ms                     ││
+│                              └──────────────────────────────────────┘│
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Elementos explicados:**
+
+- **Barra de estadísticas (arriba)** — tres chips de colores que resumen el contraste del slide de un vistazo:
+  - `~280` en rojo — líneas de código de la implementación con Camera2 vía Platform Channel
+  - `~35` en verde — líneas de la misma funcionalidad con el Flutter Camera Package
+  - `−87%` en cyan — la reducción porcentual
+
+- **Columna izquierda — Platform Channel · Camera2** (borde rojo) — código real en Dart/Kotlin para abrir la cámara usando la API de bajo nivel Camera2. Es notablemente largo y complejo: gestión manual de hilos, callbacks anidados, manejo explícito de estados de sesión. El punto es que es funcional pero extremadamente verboso.
+
+- **Divisor "VS"** — separador visual central que refuerza que es una comparativa directa.
+
+- **Columna derecha — Flutter Camera Package** (borde verde) — el mismo resultado con el paquete oficial. El código es dramáticamente más corto y legible: se instancia un `CameraController`, se llama `initialize()`, y listo.
+
+- **Botón "▶ Simular inicialización"** — al presionarlo (desde la app o haciendo clic en la diapositiva), aparecen dos barras de progreso animadas en el terminal:
+  - Una larga: `Camera2: 1020ms` — representa el tiempo que tarda la inicialización por el camino complejo
+  - Una corta: `CameraX: 74ms` — el mismo proceso optimizado. La diferencia visual es impactante.
+
+- **Terminal** — muestra el resultado de la simulación con los tiempos exactos.
+
+**Interactividad con la app:** el botón del tab 3 de la app dispara la misma animación.
+
+---
 
 ### Slide 4 — Ciclo de Vida
+**Stat Card al entrar: `4` — estados que controlan si la cámara vive o muere**
 
-Muestra los 4 estados `AppLifecycleState` de Flutter y cómo afectan a la cámara.
+**Concepto central:** La cámara es un recurso físico exclusivo — solo una app puede usarla a la vez. Flutter notifica a la app cuando el estado del sistema cambia, y el código debe responder liberando o reclamando el hardware apropiadamente.
 
-```
-resumed   → Cámara activa, sesión abierta
-inactive  → Transición, app perdiendo foco
-paused    → App en background, hardware liberado
-detached  → App destruida, recursos liberados
-```
-
-**Interactividad en vivo:**
-- Cuando el presentador minimiza o bloquea el teléfono, el estado cambia en la diapositiva en tiempo real
-- También puede simular estados manualmente desde los botones del tab 4
-- Al entrar al slide se ejecuta automáticamente una simulación de bloqueo/desbloqueo
-
-### Slide 5 — Pipeline de Captura
-
-Explica las tres superficies simultáneas de CameraX con una animación canvas:
+**Layout:** dos columnas.
 
 ```
-         ┌──── Preview Surface  ──→ GPU · 30-60 FPS
-SENSOR ──┼──── Capture Surface  ──→ JPEG · Full Res · Disco
-         └──── Analysis Surface ──→ YUV_420_888 · RAM
+┌─────────────────────────────┬──────────────────────────────────────┐
+│  COLUMNA IZQUIERDA           │  COLUMNA DERECHA                      │
+│  (diagrama de nodos)         │  (panel hw + terminal)                │
+│                              │                                        │
+│      ┌──────────────┐       │  ┌─ Hardware de Cámara ─────────────┐ │
+│      │  resumed     │ ◄─────│  │  📷                              │ │
+│      └──────┬───────┘       │  │  SESIÓN ACTIVA                   │ │
+│             │ (línea)        │  │  CameraController.initialize()   │ │
+│      ┌──────▼───────┐       │  │  ● ● ● (pulse animado)          │ │
+│      │  inactive    │       │  └──────────────────────────────────┘ │
+│      └──────┬───────┘       │                                        │
+│             │                │  ┌─ WidgetsBindingObserver ─────────┐ │
+│      ┌──────▼───────┐       │  │ [12:34] resumed → sesión abierta│ │
+│      │  paused      │       │  │ [12:35] paused → hw liberado    │ │
+│      └──────┬───────┘       │  │ [12:35] resumed → restaurado    │ │
+│             │                │  └──────────────────────────────────┘ │
+│      ┌──────▼───────┐       │                                        │
+│      │  detached    │       │                                        │
+│      └──────────────┘       │                                        │
+└─────────────────────────────┴──────────────────────────────────────┘
 ```
 
-**Elementos:**
-- Canvas animado con partículas viajando por cada rama del pipeline
-- Tres tarjetas de superficie con medidores de actividad en tiempo real
-- **Zoom y pan** disponibles: rueda del ratón o botones `+` / `⊙` / `−` en la esquina del canvas; doble clic para resetear
+**Elementos explicados:**
 
-**Interactividad en vivo:**
-- Cuando la app inicia el stream (tab Pipeline) → el canvas se activa
-- Cuando la app toma una foto → la rama Capture Surface pulsa en la animación
+- **Diagrama de nodos (izquierda)** — cuatro cajas conectadas verticalmente por líneas animadas. Cada caja representa un estado de `AppLifecycleState`. El estado activo en ese momento tiene un borde iluminado y brilla. Los conectores son líneas que fluyen hacia abajo.
+  - `resumed` (verde) — la app está en primer plano, la cámara está activa, la sesión está abierta. Estado normal de uso.
+  - `inactive` (amarillo) — la app está perdiendo el foco (llegó una llamada, apareció una notificación sobre la app). La sesión de cámara puede estar en transición.
+  - `paused` (naranja) — la app pasó al background. El hardware de cámara **debe liberarse** aquí. Si no se libera, bloquea el recurso para otras apps y puede agotar la batería.
+  - `detached` (rojo) — la app fue destruida por el sistema. Todos los recursos deben estar liberados.
+
+- **Panel "Hardware de Cámara" (derecha arriba)** — muestra el estado del hardware en tiempo real:
+  - El **ícono de cámara** (📷) cambia de aspecto según el estado: activo, en pausa, o liberado.
+  - El **texto de estado** (`SESIÓN ACTIVA` / `HARDWARE LIBERADO` / `EN TRANSICIÓN`) cambia con cada evento.
+  - El **texto de detalle** describe la llamada de código que ocurrió (ej: `CameraController.dispose()` al pausar).
+  - Los **tres puntos pulsantes** (●●●) indican actividad de hardware. Dejan de pulsar cuando la cámara se libera.
+
+- **Terminal "WidgetsBindingObserver" (derecha abajo)** — log cronológico de cada transición de estado. Cada línea muestra el timestamp y el cambio que ocurrió. Cuando el presentador bloquea o desbloquea el teléfono, aparecen líneas en tiempo real.
+
+**Comportamiento automático:** al entrar al slide se ejecuta una simulación animada del ciclo completo: `resumed → paused → resumed`, activando el diagrama y el log automáticamente, incluso sin app conectada.
+
+**Interactividad con la app:**
+- Bloquear físicamente el teléfono → aparece `paused` en el log en tiempo real
+- Desbloquear y volver a la app → aparece `resumed`
+- Botones del tab 4 de la app → simulan cualquier estado manualmente
+
+---
+
+### Slide 5 — Pipeline de Captura Simultánea
+**Stat Card al entrar: `3` — hilos simultáneos, cero conflictos de memoria**
+
+**Concepto central:** CameraX no entrega la imagen a un solo destino — la bifurca simultáneamente hacia tres canales independientes en paralelo, cada uno en su propio hilo del sistema operativo.
+
+**Layout:** canvas de animación arriba + tres tarjetas abajo + terminal.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  CANVAS ANIMADO                                    [+] [⊙] [−]      │
+│                                                                        │
+│                           ┌────── Preview Surface ──→  🖥  GPU       │
+│   ◎ SENSOR  ──────────────┼────── Capture Surface ──→  📸 JPEG      │
+│      ÓPTICO               └────── Analysis Surface ──→ 📡 YUV RAM   │
+│                                                                        │
+│  (partículas cyan fluyendo por las ramas activas)                    │
+├─────────────────┬──────────────────────┬────────────────────────────┤
+│ 🖥 Preview      │ 📸 Capture           │ 📡 Analysis                │
+│ LIVE            │ JPEG                 │ YUV                         │
+│ 30–60 FPS · GPU │ Resolución máxima    │ YUV_420_888 · RAM           │
+│ [▓▓▓▓▓▓▓░░░]   │ [░░░░░░░░░░]        │ [▓▓▓▓▓░░░░░]               │
+│                 │ (pulsa al capturar)  │                              │
+├─────────────────┴──────────────────────┴────────────────────────────┤
+│  ┌─ Surfaces · Estado del pipeline ───────────────────────────────┐ │
+│  │ [12:34] Preview Surface: stream a 30 FPS iniciado · GPU ✓     │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Elementos explicados:**
+
+- **Canvas de animación (área grande)** — toda la lógica visual se dibuja en un elemento HTML Canvas en tiempo real. Tiene tres partes:
+  - **Círculo "SENSOR ÓPTICO" (izquierda)** — pulsa constantemente. Representa el sensor físico produciendo frames continuamente.
+  - **Punto de bifurcación (centro)** — el nodo donde el stream de datos se divide en tres.
+  - **Tres curvas cúbicas (centro-derecha)** — cada curva lleva el stream a una Surface diferente. Las curvas activas tienen color, las inactivas son casi transparentes. La superior va arriba (Preview), la del medio va al centro (Capture), la inferior va abajo (Analysis).
+  - **Partículas de luz** — pequeños puntos que viajan a lo largo de las curvas activas de izquierda a derecha. Representan los frames de datos fluyendo. Aparecen solo en las ramas activas.
+  - **Círculos endpoint (derecha)** — un círculo con brillo al final de cada rama, donde "llegan" los datos. Cuando una Surface está activa, el círculo brilla con el color de esa Surface.
+
+- **Botones de zoom +/⊙/−** (esquina superior derecha del canvas) — para acercar/alejar el diagrama. También se puede usar la rueda del ratón encima del canvas. Doble clic para restablecer la vista.
+
+- **Tres tarjetas de superficie (abajo)** — cada tarjeta representa una Surface activa:
+  - **Preview Surface** (amarillo) — stream continuo a 30–60 FPS enviado a la GPU para renderizado en pantalla. La barra de actividad oscila constantemente mientras el stream está activo.
+  - **Capture Surface** (naranja) — solo se activa cuando el presentador toma una foto. La barra llega a 100% (representando el frame completo capturado), luego baja. La etiqueta `JPEG` indica el formato de salida.
+  - **Analysis Surface** (verde) — stream continuo de bytes YUV_420_888 enviados a la RAM para procesamiento. La barra oscila con una frecuencia diferente a Preview, mostrando que son hilos independientes.
+
+- **Terminal** — log de eventos del pipeline: cuándo se iniciaron los streams, cuándo se tomó una foto.
+
+**Comportamiento automático:** al entrar al slide 5, Preview y Analysis se activan automáticamente.
+
+**Interactividad con la app:**
+- Iniciar el stream desde el tab 5 → activa las ramas del canvas
+- Tocar capturar → la rama Capture Surface pulsa brevemente
+
+---
 
 ### Slide 6 — Extensiones CameraX
+**Stat Card al entrar: `3.4×` — mejora de calidad con la API nativa**
 
-Contrasta el método antiguo (screenshot del preview) con las extensiones nativas del fabricante.
+**Concepto central:** Históricamente, las apps de terceros usaban un atajo técnico para capturar imágenes (tomar screenshot del preview), perdiendo todo el procesamiento avanzado del ISP del fabricante. La API de Extensiones de CameraX resuelve esto correctamente.
 
-| Método | Calidad | Acceso al ISP |
-|---|---|---|
-| Screenshot del preview | 28% | No |
-| CameraX Extensions API | 94% | Sí (HDR, Modo Noche, Bokeh) |
-
-**Interactividad en vivo:**
-- Cuando el presentador selecciona un modo en la app, la tarjeta correspondiente se resalta en la diapositiva
-
-### Slide 7 — Google ML Kit
-
-Muestra el pipeline de inferencia de ML Kit para detección de códigos QR:
+**Layout:** dos tarjetas grandes en comparativa + terminal abajo.
 
 ```
-CameraImage → planes[0] (Y) → ML Kit → JSON → Socket
+┌─────────────────────────────┬───┬────────────────────────────────────┐
+│  MÉTODO ANTIGUO              │   │  EXTENSIÓN NATIVA                   │
+│  Apps de terceros (pre-2022) │VS │  CameraX Extensions API             │
+│                              │   │                                      │
+│  [visual de imagen con ruido]│   │  [visual con cuadrícula glowing]    │
+│  Screenshot del Preview      │   │  Pipeline ISP Completo              │
+│                              │   │                                      │
+│  ✗ Buffer capturado display  │   │  ✓ Acceso directo a la HAL          │
+│  ✗ Sin procesamiento ISP     │   │  ✓ Pipeline ISP completo hardware    │
+│  ✗ Sin Modo Noche ni HDR     │   │  ✓ HDR, Modo Noche, Bokeh nativo    │
+│  ✗ Calidad inferior app sis  │   │  ✓ Idéntico a la app del sistema    │
+│                              │   │                                      │
+│  Calidad ███░░░░░░░ 28%      │   │  Calidad ████████░░ 94%             │
+└─────────────────────────────┴───┴────────────────────────────────────┘
+│  ┌─ Extensiones · Modo activo ─────────────────────────────────────┐ │
+│  │ > Modo screenshot activado — calidad: 28%                      │ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Elementos:**
-- Visualización de los planos YUV_420_888 (Y · U · V) con el submuestreo 4:2:0
-- Terminal verde en tiempo real con cada detección
-- Contador de FPS
+**Elementos explicados:**
 
-**Interactividad en vivo:**
-- Cuando la app escanea un QR, el resultado aparece en el terminal: tipo, valor, formato, coordenadas
+- **Tarjeta izquierda "MÉTODO ANTIGUO"** (borde rojo oscuro) — representa el enfoque incorrecto:
+  - El **visual** muestra una imagen con ruido y textura granulada — simula visualmente la pérdida de calidad de un screenshot.
+  - La etiqueta `Screenshot del Preview` explica el método: la app literalmente capturaba la imagen que ya estaba en pantalla (un frame del preview ya procesado para display), no la imagen RAW del sensor.
+  - La **lista en rojo** (✗) enumera las limitaciones: no hay acceso al pipeline ISP del fabricante, por lo tanto no hay HDR nativo, Modo Noche, ni Bokeh de hardware.
+  - La **barra de calidad** llega solo al 28% y es roja.
+
+- **Tarjeta derecha "EXTENSIÓN NATIVA"** (borde verde) — representa el enfoque correcto:
+  - El **visual** muestra una cuadrícula con brillo animado — simula el pipeline de procesamiento activo.
+  - La etiqueta `Pipeline ISP Completo` indica que se está usando el procesador de señal de imagen del fabricante directamente.
+  - La **lista en verde** (✓) enumera las ventajas: acceso directo a la HAL, ISP completo, todos los modos especiales del fabricante disponibles.
+  - La **barra de calidad** llega al 94% y es verde.
+
+- **Terminal** — muestra qué modo está activo actualmente y el valor de calidad resultante.
+
+**Comportamiento cuando la app interactúa:**
+- Tocar "Captura por Preview" en el tab 6 → la tarjeta izquierda se resalta con borde brillante, el terminal muestra el modo activado
+- Tocar "Activación de Extensión Nativa" → la tarjeta derecha se resalta, el terminal confirma el modo
+
+---
+
+### Slide 7 — Google ML Kit · Edge AI
+**Stat Card al entrar: `50ms` — latencia de IA sin internet**
+
+**Concepto central:** Los bytes YUV de la Analysis Surface pueden alimentar un modelo de IA directamente en el dispositivo. ML Kit procesa cada frame en milisegundos sin enviar datos a ningún servidor externo.
+
+**Layout:** dos columnas.
+
+```
+┌─────────────────────────────┬──────────────────────────────────────┐
+│  COLUMNA IZQUIERDA           │  COLUMNA DERECHA                      │
+│  (paneles YUV + pipeline)    │  (terminal ML Kit)                    │
+│                              │                                        │
+│  ┌─ YUV_420_888 ───────────┐ │  ┌─ ML Kit · Detección en tiempo real│
+│  │ ┌───────────┐ ┌──┐ ┌──┐│ │  │ > Inicializando Google ML Kit...  │
+│  │ │           │ │U │ │V ││ │  │ > Cargando modelo BarcodeScanner  │
+│  │ │  Y (lum.) │ │Cb│ │Cr││ │  │ > Apunta la cámara a un QR...     │
+│  │ │  (grande) │ │  │ │  ││ │  │                                    │
+│  │ │← ML usa  │ └──┘ └──┘│ │  │ ▶ DETECCIÓN:                       │
+│  │ │  este    │ Submues.  │ │  │   tipo: QR_CODE                    │
+│  │ └───────────┘ 4:2:0    │ │  │   valor: "https://github.com/..."  │
+│  │ Reducción vs RGB: −50% │ │  │   confianza: 0.98                  │
+│  └─────────────────────────┘ │  │   coordenadas: (120,80)-(340,290)  │
+│                              │  │                                    │
+│  CameraImage→planes[0]→MLKit │  │                    — FPS: 28 —    │
+│  →JSON→Socket                │  └────────────────────────────────────┘│
+└─────────────────────────────┴──────────────────────────────────────┘
+```
+
+**Elementos explicados:**
+
+- **Panel YUV_420_888 (izquierda arriba)** — visualiza la estructura del formato de memoria que usa la Analysis Surface para transmitir los frames:
+  - **Plano Y (grande, izquierda)** — "Luminancia". Es el brillo de cada píxel, sin información de color. Tiene la **resolución completa** de la imagen. La etiqueta `← ML Kit usa este canal` señala que el modelo de IA trabaja principalmente con este plano, no con los colores.
+  - **Plano U/Cb (pequeño, arriba derecha)** — "Crominancia azul". Información de color en el eje azul. Solo tiene la **mitad de resolución** que Y (submuestreo 4:2:0).
+  - **Plano V/Cr (pequeño, abajo derecha)** — "Crominancia roja". Información de color en el eje rojo. También a mitad de resolución.
+  - **"Submuestreo 4:2:0"** — la notación técnica que describe que U y V están a la mitad de resolución que Y. Esto es lo que da el ahorro de memoria.
+  - **Barra "Reducción vs RGB: −50%"** — YUV_420_888 usa 1.5 bytes por píxel. RGB usa 3 bytes por píxel. La misma imagen ocupa la mitad de RAM. Esto es crítico para procesar a 30 FPS sin agotar la memoria.
+
+- **Diagrama de pipeline de inferencia** (izquierda abajo) — muestra los pasos secuenciales:
+  - `CameraImage` → el objeto que entrega la Analysis Surface cada frame
+  - `planes[0]` → se extrae solo el plano Y (luminancia), descartando U y V para mayor velocidad
+  - `ML Kit` → el modelo de detección de códigos QR/barras procesa el plano Y
+  - `JSON Socket` → el resultado se empaqueta en JSON y se envía por WebSocket al servidor
+
+- **Terminal verde (derecha)** — simula una consola de IA en tiempo real. Al inicio muestra los mensajes de inicialización (cargando modelo). Cuando la app detecta un QR, aparece una nueva entrada con:
+  - `tipo` — el tipo de código (`QR_CODE`, `EAN_13`, etc.)
+  - `valor` — el contenido del código (URL, texto, etc.)
+  - `confianza` — probabilidad de que la detección sea correcta (0.0 a 1.0)
+  - `coordenadas` — posición del código en la imagen en píxeles
+
+- **Contador de FPS** (esquina superior del terminal) — muestra cuántos frames por segundo está procesando el modelo de ML Kit. Normalmente entre 20-30 FPS en un teléfono moderno.
+
+**Interactividad con la app:** apuntar la cámara del teléfono a un código QR → el terminal se actualiza en tiempo real con los datos detectados. La velocidad de actualización demuestra que el procesamiento es local (sin latencia de red externa).
 
 ---
 
