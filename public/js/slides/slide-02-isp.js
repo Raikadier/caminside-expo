@@ -139,10 +139,10 @@
 
   /* ── Etiquetas didácticas 3D ───────────────────────────── */
   const CAM_PARTS = [
-    { id: 'optica', title: 'Sistema Óptico',  sub: 'Conjunto de lentes' },
-    { id: 'sensor', title: 'Sensor CMOS',     sub: 'Fotones → carga eléctrica' },
-    { id: 'isp',    title: 'ISP · SoC',       sub: 'Procesamiento digital' },
-    { id: 'pcb',    title: 'PCB',             sub: 'I²C · MIPI CSI-2' },
+    { id: 'optica', title: 'Sistema Óptico',  sub: 'Conjunto de lentes',        side: 'r' },
+    { id: 'sensor', title: 'Sensor CMOS',     sub: 'Fotones → carga eléctrica', side: 'l' },
+    { id: 'isp',    title: 'ISP · SoC',       sub: 'Procesamiento digital',      side: 'r' },
+    { id: 'pcb',    title: 'PCB',             sub: 'I²C · MIPI CSI-2',           side: 'l' },
   ];
   /* Y fija de cada etiqueta como fracción de la altura del canvas */
   const LBL_Y_FRAC = [0.17, 0.41, 0.61, 0.80];
@@ -211,16 +211,28 @@
       dot.style.top     = `${p.y - 4}px`;
       dot.style.opacity = alpha;
 
-      /* Badge: Y fija, alineado a la derecha del canvas */
-      const lblY = H * LBL_Y_FRAC[i];
-      badge.style.top     = `${lblY}px`;   /* CSS translateY(-50%) centra verticalmente */
+      /* Badge: Y fija, lado alternado (r/l) */
+      const side   = CAM_PARTS[i].side;
+      const MARGIN = 10;
+      const lblY   = H * LBL_Y_FRAC[i];
+      const badgeW = badge.offsetWidth || 110;
+
+      badge.style.top = `${lblY}px`;     /* CSS translateY(-50%) centra verticalmente */
       badge.style.opacity = visible ? 1 : 0;
 
-      /* Línea: desde el dot hasta el borde izquierdo del badge */
-      const badgeW   = badge.offsetWidth  || 110;
-      const badgeH   = badge.offsetHeight || 30;
-      const lineEndX = W - badgeW - 16;     /* 16 = gap de margen derecho */
-      const lineEndY = lblY;                /* Y central del badge */
+      if (side === 'r') {
+        badge.style.right = `${MARGIN}px`;
+        badge.style.left  = '';
+      } else {
+        badge.style.left  = `${MARGIN}px`;
+        badge.style.right = '';
+      }
+
+      /* Línea: dot → borde del badge (lado del que sale la línea) */
+      const lineEndX = side === 'r'
+        ? W - MARGIN - badgeW - 6    /* borde izq. del badge derecho */
+        : MARGIN + badgeW + 6;       /* borde der. del badge izquierdo */
+      const lineEndY = lblY;
       line.setAttribute('x1', p.x);
       line.setAttribute('y1', p.y);
       line.setAttribute('x2', lineEndX);

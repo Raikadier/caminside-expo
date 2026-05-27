@@ -140,12 +140,13 @@ const CamInsideThree = (() => {
     }
 
     /* ── Label anchors — puntos 3D invisibles, rotan con el módulo ── */
-    /* x positivo = borde derecho del objeto (se proyecta a la derecha en pantalla) */
+    /* x positivo = borde derecho · x negativo = borde izquierdo     */
+    /* Alternando der/izq para el diseño didáctico: R, L, R, L       */
     [
-      { id: 'optica', pos: [0.88, 1.10, 0.0]  },  /* borde der. del barril de lente */
-      { id: 'sensor', pos: [0.72, 0.04, 0.0]  },  /* borde der. del sensor de imagen */
-      { id: 'isp',    pos: [0.82, -0.49, 0.0] },  /* borde der. del SoC/ISP         */
-      { id: 'pcb',    pos: [1.22, -0.86, 0.0] },  /* borde der. de la PCB            */
+      { id: 'optica', pos: [ 0.88,  1.10, 0.0] },  /* der — borde der. del barril de lente */
+      { id: 'sensor', pos: [-0.72,  0.04, 0.0] },  /* izq — borde izq. del sensor de imagen*/
+      { id: 'isp',    pos: [ 0.82, -0.49, 0.0] },  /* der — borde der. del SoC/ISP         */
+      { id: 'pcb',    pos: [-1.22, -0.86, 0.0] },  /* izq — borde izq. de la PCB           */
     ].forEach(({ id, pos }) => {
       const obj = new THREE.Object3D();
       obj.position.set(...pos);
