@@ -37,11 +37,13 @@
   <div id="cso-dots"></div>
 </div>
 
-<div id="ws-hud">
-  <div id="ws-dot"></div>
-  <span id="ws-label">Conectando...</span>
-  <span id="ws-latency" style="opacity:0;font-size:0.5rem;margin-left:4px;transition:opacity 0.4s"></span>
-  <span id="ws-audience" style="opacity:0;font-size:0.5rem;transition:opacity 0.4s"></span>
+<div id="hud-group">
+  <div id="ws-hud">
+    <div id="ws-dot"></div>
+    <span id="ws-label">Conectando...</span>
+    <span id="ws-latency" style="opacity:0;font-size:0.5rem;margin-left:4px;transition:opacity 0.4s"></span>
+    <span id="ws-audience" style="opacity:0;font-size:0.5rem;transition:opacity 0.4s"></span>
+  </div>
 </div>
 
 <div class="reveal">
@@ -288,7 +290,15 @@
           <div class="ext-card-hd"><span class="ext-tag ext-tag-danger">MÉTODO ANTIGUO</span><span class="ext-sub">Apps de terceros (pre-2022)</span></div>
           <div class="ext-visual-old">
             <div class="old-noise"></div>
-            <div class="old-label">Screenshot del Preview</div>
+            <div class="ext-dflow">
+              <div class="edf-node edf-dim">📱 Display Buffer</div>
+              <div class="edf-arr edf-arr-dim">↓</div>
+              <div class="edf-node edf-dim">captureScreen()</div>
+              <div class="edf-arr edf-arr-dim">↓</div>
+              <div class="edf-node edf-skip">✗ &nbsp;HAL / ISP omitido</div>
+              <div class="edf-arr edf-arr-dim">↓</div>
+              <div class="edf-node edf-bad">JPEG &nbsp;·&nbsp; 28% calidad</div>
+            </div>
           </div>
           <ul class="ext-list">
             <li class="neg">✗ &nbsp;Buffer capturado del display</li>
@@ -305,7 +315,15 @@
           <div class="ext-card-hd"><span class="ext-tag ext-tag-success">EXTENSIÓN NATIVA</span><span class="ext-sub">CameraX Extensions API</span></div>
           <div class="ext-visual-new">
             <div class="new-glow-grid"></div>
-            <div class="new-label">Pipeline ISP Completo</div>
+            <div class="ext-dflow">
+              <div class="edf-node edf-good">📷 Camera Sensor · RAW</div>
+              <div class="edf-arr edf-arr-good">↓</div>
+              <div class="edf-node edf-good">⚡ HAL &nbsp;→&nbsp; ISP</div>
+              <div class="edf-arr edf-arr-good">↓</div>
+              <div class="edf-node edf-good">✦ CameraX Extension API</div>
+              <div class="edf-arr edf-arr-good">↓</div>
+              <div class="edf-node edf-best">Full quality &nbsp;·&nbsp; 94%</div>
+            </div>
           </div>
           <ul class="ext-list">
             <li class="pos">✓ &nbsp;Acceso directo a la HAL del fabricante</li>

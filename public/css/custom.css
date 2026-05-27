@@ -58,8 +58,14 @@ html, body {
 }
 
 /* ── WS HUD ─────────────────────────────────────────────────── */
-#ws-hud {
+/* ── HUD Group: contenedor que agrupa badge + pill de conexión ── */
+#hud-group {
   position: fixed; top: 16px; right: 20px; z-index: 300;
+  display: flex; align-items: center; gap: 10px;
+  /* el badge se inserta antes del HUD (prepend), así queda a su izquierda */
+}
+
+#ws-hud {
   display: flex; align-items: center; gap: 8px;
   background: rgba(3,3,15,0.85);
   border: 1px solid var(--border);
@@ -104,9 +110,8 @@ html, body {
 .hd-muted { color: var(--text-dim); font-weight: 400; }
 
 /* ── Shared: Int. Badge ─────────────────────────────────────── */
-/* FIX ⑤: posicionado a la izquierda del HUD (right: 190px) para no colisionar */
+/* Posicionado dentro de #hud-group (flex), ya no necesita position:fixed propio */
 .slide-int-badge {
-  position: fixed; top: 16px; right: 200px; z-index: 250;
   font-family: var(--mono); font-size: 0.55rem; font-weight: 700;
   color: var(--cyan); background: rgba(3,3,15,0.85);
   border: 1px solid rgba(0,240,255,0.35);
@@ -761,6 +766,27 @@ html, body {
 @keyframes gridPulse {
   0%,100% { opacity: 0.5; } 50% { opacity: 1; }
 }
+/* ── Diagrama de flujo dentro de ext-visual ─────────────────── */
+.ext-dflow {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.edf-node {
+  font-family: var(--mono); font-size: 0.48rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 4px;
+  letter-spacing: 0.04em; white-space: nowrap;
+}
+.edf-arr { font-size: 0.6rem; line-height: 1; }
+/* Nodos del método antiguo */
+.edf-dim       { background: rgba(100,100,100,0.15); color: var(--text-muted); border: 1px solid var(--border); }
+.edf-arr-dim   { color: var(--text-muted); opacity: 0.6; }
+.edf-skip      { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.35); text-decoration: line-through; }
+.edf-bad       { background: rgba(239,68,68,0.2); color: var(--red); border: 1px solid rgba(239,68,68,0.5); }
+/* Nodos del método nativo */
+.edf-good      { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+.edf-arr-good  { color: var(--green); opacity: 0.7; }
+.edf-best      { background: rgba(34,197,94,0.22); color: var(--green); border: 1px solid rgba(34,197,94,0.55); }
+
 .ext-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .ext-list li { font-size: 0.58rem; color: var(--text-dim); }
 .ext-list li.pos { color: var(--green); }

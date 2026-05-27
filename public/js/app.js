@@ -33,7 +33,8 @@
   const badge = document.createElement('div');
   badge.id = 'global-int-badge';
   badge.className = 'slide-int-badge';
-  document.body.appendChild(badge);
+  const hudGroup = document.getElementById('hud-group') || document.body;
+  hudGroup.insertBefore(badge, hudGroup.firstChild);
 
   const BADGE_LABELS = {
     1: 'INT. 1', 2: 'INT. 2', 3: 'INT. 3', 4: 'INT. 4',
@@ -184,7 +185,7 @@
     line.className = 'cc-line' + (entry.type === 'warn' ? ' dim' : '');
     line.textContent = `[${entry.ts}] ${entry.msg}`;
     body.appendChild(line);
-    body.scrollTop = body.scrollHeight;
+    requestAnimationFrame(() => { body.scrollTop = body.scrollHeight; });
   });
 
   SOCKET.on('__connected', () => {
@@ -194,6 +195,7 @@
     line.className = 'cc-line';
     line.textContent = '> Dispositivo móvil conectado — sistema listo ✓';
     body.appendChild(line);
+    requestAnimationFrame(() => { body.scrollTop = body.scrollHeight; });
   });
 
   /* ── Init conferencia ──────────────────────────────────── */

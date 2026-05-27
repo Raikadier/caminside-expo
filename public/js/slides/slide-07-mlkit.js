@@ -89,7 +89,7 @@
     line.className = `mlt-line ${cls}`;
     line.textContent = `[${ts}] ${text}`;
     termEl.appendChild(line);
-    termEl.scrollTop = termEl.scrollHeight;
+    requestAnimationFrame(() => { termEl.scrollTop = termEl.scrollHeight; });
 
     /* Keep max 40 lines */
     while (termEl.children.length > 40) termEl.removeChild(termEl.firstChild);

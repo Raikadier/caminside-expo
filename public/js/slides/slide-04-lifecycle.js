@@ -140,7 +140,7 @@
     line.className = `tl ${type}`;
     line.textContent = `[${ts}] ${msg}`;
     logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
+    requestAnimationFrame(() => { logEl.scrollTop = logEl.scrollHeight; });
   }
 
   /* ── Socket events ─────────────────────────────────────── */

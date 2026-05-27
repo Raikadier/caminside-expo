@@ -152,7 +152,7 @@ class _State extends State<CamInsideScreen> {
     line.className = `tl ${type}`;
     line.textContent = `[${ts}] ${msg}`;
     logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
+    requestAnimationFrame(() => { logEl.scrollTop = logEl.scrollHeight; });
   }
 
   /* ── Simulate initialization ───────────────────────────── */
