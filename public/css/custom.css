@@ -502,9 +502,10 @@ html, body {
 .lifecycle-layout {
   flex: 1; display: flex; gap: 20px; overflow: hidden; min-height: 0;
 }
-/* PROP-7: diagram-col centra el contenido → nodos flotan al medio con espacio
-   muerto arriba y abajo. Fix: flex-direction column + stretch para que .lc-diagram
-   llene el alto; space-evenly distribuye los 4 nodos uniformemente. */
+/* PROP-7/PROP-11: diagram-col llena el alto disponible; el grupo de nodos se
+   centra verticalmente (justify-content:center). Cada nodo-wrap tiene altura
+   natural (sin flex:1), conector a altura fija de 28px → sin espacio muerto
+   al final ni conectores desproporcionadamente largos. */
 .lc-diagram-col {
   flex: 1; display: flex;
   flex-direction: column;
@@ -515,10 +516,10 @@ html, body {
 .lc-diagram {
   display: flex; flex-direction: column; align-items: center;
   gap: 0; width: 100%;
-  flex: 1;                   /* llena el alto de lc-diagram-col */
-  justify-content: flex-start; /* distribución la controlan los node-wrap */
+  flex: 1;                  /* llena el alto de lc-diagram-col */
+  justify-content: center;  /* PROP-11: centra el bloque de nodos verticalmente */
 }
-.lc-node-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.lc-node-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
 .lc-node {
   width: 100%; display: flex; align-items: center; gap: 12px;
   background: var(--bg-card); border: 1px solid var(--border);
@@ -547,14 +548,14 @@ html, body {
 .lc-state-name { font-size: 0.72rem; font-weight: 600; font-family: var(--mono); color: var(--text); }
 .lc-node.active .lc-state-name { color: var(--node-color, var(--cyan)); }
 .lc-state-desc { font-size: 0.52rem; color: var(--text-muted); }
-.lc-connector { flex: 1; width: 2px; min-height: 12px; background: var(--border); margin: 0 auto; }
+.lc-connector { width: 2px; height: 28px; flex-shrink: 0; background: var(--border); margin: 0 auto; }
 .lc-connector.flowing {
   background: linear-gradient(to bottom, var(--node-color, var(--cyan)), transparent);
   animation: flowDown 0.8s ease forwards;
 }
 @keyframes flowDown {
   from { height: 0; opacity: 0; }
-  to   { height: 16px; opacity: 1; }
+  to   { height: 28px; opacity: 1; } /* PROP-11: coincidir con la altura fija del conector */
 }
 
 .cam-hw-panel {
