@@ -888,3 +888,160 @@ html, body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ═══════════════════ CONFERENCE FEATURES ════════════════════
+   CONF-1 · Iris Transition
+   CONF-2 · Big Stat Cards
+   CONF-3 · Audience QR
+   ════════════════════════════════════════════════════════════ */
+
+/* ── CONF-1: Iris Overlay ──────────────────────────────────── */
+#iris-overlay {
+  position: fixed; inset: 0; z-index: 8900;
+  background: #000;
+  clip-path: circle(120% at 50% 50%); /* starts fully open = invisible */
+  opacity: 0;
+  pointer-events: none;
+  will-change: clip-path, opacity;
+}
+#iris-overlay.iris-open {
+  animation: irisReveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes irisReveal {
+  0%   { clip-path: circle(0% at 50% 50%);   opacity: 1; }
+  35%  { clip-path: circle(28% at 50% 50%);  opacity: 1; }
+  70%  { clip-path: circle(72% at 50% 50%);  opacity: 0.7; }
+  100% { clip-path: circle(120% at 50% 50%); opacity: 0; }
+}
+
+/* Anillo de diafragma que expande junto al iris */
+#iris-ring {
+  position: fixed; z-index: 8901;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0; height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0,240,255,0);
+  pointer-events: none;
+  will-change: width, height, border-color, box-shadow;
+}
+#iris-ring.iris-open {
+  animation: irisRingAnim 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes irisRingAnim {
+  0%   { width: 0;      height: 0;      border-color: rgba(0,240,255,0.95); box-shadow: 0 0 20px rgba(0,240,255,0.6); }
+  30%  { width: 55vmin; height: 55vmin; border-color: rgba(0,240,255,0.7); }
+  70%  { width: 130vmin;height: 130vmin;border-color: rgba(0,240,255,0.2); }
+  100% { width: 200vmin;height: 200vmin;border-color: rgba(0,240,255,0);   box-shadow: none; }
+}
+
+/* ── CONF-2: Stat Card Overlay ─────────────────────────────── */
+#conf-stat-overlay {
+  position: fixed; inset: 0; z-index: 8800;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  background: radial-gradient(ellipse at center,
+    rgba(3,3,20,0.97) 0%,
+    rgba(0,0,0,0.99)  70%);
+  pointer-events: none;
+  opacity: 0;
+  /* subtle grid texture */
+  background-image:
+    radial-gradient(ellipse at center, rgba(3,3,20,0.97) 0%, rgba(0,0,0,0.99) 70%),
+    linear-gradient(rgba(0,240,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+#conf-stat-overlay.cso-show {
+  animation: csoFadeIn 0.35s ease forwards;
+}
+#conf-stat-overlay.cso-hide {
+  animation: csoFadeOut 0.55s ease forwards;
+}
+@keyframes csoFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes csoFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.cso-eyebrow {
+  font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px 16px; border-radius: 999px;
+}
+
+#cso-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(72px, 14vw, 160px);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -0.04em;
+  /* color set by JS per slide */
+  animation: csoNumPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes csoNumPop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+#cso-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(14px, 2.2vw, 26px);
+  font-weight: 500; color: rgba(255,255,255,0.85);
+  text-align: center; line-height: 1.4;
+  max-width: 640px;
+  animation: csoLabelSlide 0.45s 0.08s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes csoLabelSlide {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+#cso-sub {
+  font-family: var(--mono); font-size: clamp(10px, 1.2vw, 14px);
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.05em;
+  animation: csoLabelSlide 0.45s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+#cso-dots {
+  display: flex; gap: 8px; margin-top: 8px;
+  animation: csoLabelSlide 0.45s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+}
+.cso-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.cso-dot-active {
+  background: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,240,255,0.7);
+}
+
+/* ── CONF-3: Audience QR en portada ────────────────────────── */
+[data-state="s-cover"] { position: relative; }
+
+#cover-qr-wrap {
+  position: absolute; bottom: 22px; right: 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  z-index: 10;
+}
+.cover-qr-inner {
+  padding: 8px; border-radius: 8px;
+  background: #03030f;
+  border: 1px solid rgba(0,240,255,0.35);
+  box-shadow: 0 0 20px rgba(0,240,255,0.12);
+}
+/* qrcodejs genera un <canvas> o <img> dentro */
+#cover-qr canvas, #cover-qr img {
+  display: block; border-radius: 2px;
+}
+.cover-qr-label {
+  font-family: var(--mono); font-size: 0.5rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(0,240,255,0.6);
+}
+.cover-qr-url {
+  font-family: var(--mono); font-size: 0.42rem;
+  color: rgba(255,255,255,0.25);
+  text-align: center; max-width: 130px;
+  word-break: break-all;
+}

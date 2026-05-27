@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CamInside · Modo Audiencia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cyan:   #00f0ff;
+      --bg:     #03030f;
+      --mono:   'JetBrains Mono', monospace;
+      --sans:   'Space Grotesk', sans-serif;
+      --border: rgba(255,255,255,0.08);
+    }
+
+    html, body {
+      height: 100%; background: var(--bg); color: #fff;
+      font-family: var(--sans); overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    /* ── Glow orb behind main content ── */
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; z-index: 0; transition: background 0.8s;
+    }
+    #orb1 { width: 320px; height: 320px; top: -80px; right: -80px;
+            background: rgba(0,240,255,0.08); }
+    #orb2 { width: 260px; height: 260px; bottom: -60px; left: -60px;
+            background: rgba(168,85,247,0.07); }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      height: 100%; display: flex; flex-direction: column;
+      padding: 0;
+    }
+
+    /* ── Progress bar (slide tracker) ── */
+    .progress-bar {
+      height: 3px; background: rgba(255,255,255,0.06);
+      flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--cyan);
+      box-shadow: 0 0 10px rgba(0,240,255,0.7);
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Slide dots ── */
+    .slide-dots {
+      display: flex; justify-content: center; gap: 7px;
+      padding: 14px 0 10px;
+      flex-shrink: 0;
+    }
+    .slide-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .slide-dot.active {
+      background: var(--cyan);
+      transform: scale(1.5);
+      box-shadow: 0 0 8px rgba(0,240,255,0.8);
+    }
+
+    /* ── Main content ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 0 28px; gap: 10px; min-height: 0;
+    }
+
+    /* Slide section number */
+    .section-chip {
+      font-family: var(--mono); font-size: 0.58rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 5px 14px; border-radius: 999px;
+      transition: color 0.4s, border-color 0.4s;
+    }
+
+    /* Slide icon */
+    .slide-icon {
+      font-size: 3rem;
+      transition: all 0.4s;
+      filter: drop-shadow(0 0 12px rgba(0,240,255,0.4));
+    }
+
+    /* Slide title */
+    .slide-title {
+      font-size: clamp(1.6rem, 7vw, 2.6rem);
+      font-weight: 700; text-align: center; line-height: 1.2;
+      letter-spacing: -0.02em;
+      transition: color 0.5s;
+    }
+
+    /* BIG STAT */
+    .slide-stat {
+      font-family: var(--sans);
+      font-size: clamp(3rem, 14vw, 6rem);
+      font-weight: 900; letter-spacing: -0.04em; line-height: 1;
+      text-align: center;
+      transition: color 0.5s, text-shadow 0.5s;
+    }
+
+    /* Slide description */
+    .slide-desc {
+      font-family: var(--mono); font-size: clamp(0.6rem, 2.5vw, 0.75rem);
+      color: rgba(255,255,255,0.4); text-align: center;
+      letter-spacing: 0.04em; line-height: 1.6;
+      max-width: 320px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 12px 20px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .footer-brand {
+      font-family: var(--mono); font-size: 0.55rem;
+      color: rgba(255,255,255,0.2); letter-spacing: 0.1em;
+    }
+    .footer-status {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 0.55rem;
+      color: rgba(255,255,255,0.25);
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #ef4444; transition: background 0.4s, box-shadow 0.4s;
+    }
+    .status-dot.live {
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34,197,94,0.8);
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+      50%       { box-shadow: 0 0 16px rgba(34,197,94,0.9); }
+    }
+
+    /* ── Slide change animation ── */
+    .main.changing .slide-title,
+    .main.changing .slide-stat,
+    .main.changing .slide-desc,
+    .main.changing .slide-icon {
+      animation: changeSlide 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes changeSlide {
+      0%   { opacity: 0; transform: translateY(14px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Cover state special ── */
+    .wrapper.cover .slide-stat { display: none; }
+    .wrapper.cover .slide-title {
+      font-size: clamp(2rem, 9vw, 3.5rem);
+      background: linear-gradient(135deg, #fff 30%, var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* ── Responsive: very small screens ── */
+    @media (max-height: 580px) {
+      .slide-stat { font-size: clamp(2.2rem, 10vw, 4rem); }
+      .slide-icon  { font-size: 2rem; }
+      .slide-dots  { padding: 8px 0 6px; }
+    }
+  </style>
+</head>
+<body>
+<div id="orb1" class="orb"></div>
+<div id="orb2" class="orb"></div>
+
+<div class="wrapper" id="wrapper">
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <div class="slide-dots" id="slide-dots"></div>
+
+  <div class="main" id="main-content">
+    <div class="section-chip" id="section-chip">Conectando...</div>
+    <div class="slide-icon" id="slide-icon">📷</div>
+    <div class="slide-title" id="slide-title">Cámara Android</div>
+    <div class="slide-stat" id="slide-stat"></div>
+    <div class="slide-desc" id="slide-desc">Esperando al presentador...</div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">CamInside · UPC · 2026</div>
+    <div class="footer-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-label">Conectando</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ── Slide data ─────────────────────────────────────────────────── */
+  const SLIDES = {
+    0: { title: 'Cámara Android:\nBajo el Capó', stat: '',      icon: '📷', color: '#00f0ff',
+         chip: 'Introducción',   desc: 'Del silicio al widget — la historia completa' },
+    1: { title: 'Arquitectura HAL',              stat: '5',      icon: '🔌', color: '#a78bfa',
+         chip: 'Sección 1 / 7',  desc: 'HAL · Driver Stack · Linux Kernel' },
+    2: { title: 'Image Signal\nProcessor',       stat: '47',     icon: '⚡', color: '#00f0ff',
+         chip: 'Sección 2 / 7',  desc: 'De fotones crudos a píxeles procesados' },
+    3: { title: 'APIs de Cámara',                stat: '−87%',   icon: '📊', color: '#22c55e',
+         chip: 'Sección 3 / 7',  desc: 'Camera2 vs CameraX · Abstracción que libera' },
+    4: { title: 'Ciclo de Vida',                 stat: '4',      icon: '🔄', color: '#f59e0b',
+         chip: 'Sección 4 / 7',  desc: 'La cámara es un recurso físico exclusivo' },
+    5: { title: 'Pipeline de\nCaptura',          stat: '3',      icon: '🔀', color: '#f97316',
+         chip: 'Sección 5 / 7',  desc: 'Hilos simultáneos · Preview · JPEG · YUV' },
+    6: { title: 'Extensiones\nCameraX',          stat: '3.4×',   icon: '✨', color: '#22c55e',
+         chip: 'Sección 6 / 7',  desc: 'HDR · Bokeh · Modo Noche nativo' },
+    7: { title: 'ML Kit\nEdge AI',               stat: '50ms',   icon: '🤖', color: '#4ade80',
+         chip: 'Sección 7 / 7',  desc: 'Inferencia on-device sin internet' },
+  };
+  const TOTAL = Object.keys(SLIDES).length;
+
+  /* ── DOM refs ───────────────────────────────────────────────────── */
+  const wrapper    = document.getElementById('wrapper');
+  const mainEl     = document.getElementById('main-content');
+  const chipEl     = document.getElementById('section-chip');
+  const iconEl     = document.getElementById('slide-icon');
+  const titleEl    = document.getElementById('slide-title');
+  const statEl     = document.getElementById('slide-stat');
+  const descEl     = document.getElementById('slide-desc');
+  const dotsEl     = document.getElementById('slide-dots');
+  const progressEl = document.getElementById('progress-fill');
+  const statusDot  = document.getElementById('status-dot');
+  const statusLbl  = document.getElementById('status-label');
+  const orb1       = document.getElementById('orb1');
+
+  /* ── Build dots ─────────────────────────────────────────────────── */
+  function buildDots() {
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'slide-dot';
+      d.id = `dot-${i}`;
+      dotsEl.appendChild(d);
+    }
+  }
+  buildDots();
+
+  /* ── Update UI ──────────────────────────────────────────────────── */
+  let currentIdx = 0;
+
+  function updateUI(idx, animate = true) {
+    currentIdx = idx;
+    const s = SLIDES[idx] || SLIDES[0];
+
+    /* Dots */
+    document.querySelectorAll('.slide-dot').forEach((d, i) =>
+      d.classList.toggle('active', i === idx));
+
+    /* Progress */
+    progressEl.style.width = `${((idx + 1) / TOTAL) * 100}%`;
+    progressEl.style.background = s.color;
+    progressEl.style.boxShadow  = `0 0 10px ${s.color}99`;
+
+    /* Animation trigger */
+    if (animate) {
+      mainEl.classList.add('changing');
+      setTimeout(() => mainEl.classList.remove('changing'), 450);
+    }
+
+    /* Content */
+    chipEl.textContent        = s.chip;
+    chipEl.style.color        = s.color;
+    chipEl.style.borderColor  = s.color + '40';
+    iconEl.textContent        = s.icon;
+    iconEl.style.filter       = `drop-shadow(0 0 14px ${s.color}60)`;
+    titleEl.innerHTML         = s.title.replace('\n', '<br>');
+    titleEl.style.color       = s.color;
+    statEl.textContent        = s.stat;
+    statEl.style.color        = s.color;
+    statEl.style.textShadow   = `0 0 50px ${s.color}80, 0 0 100px ${s.color}30`;
+    descEl.textContent        = s.desc;
+
+    /* Orb accent color */
+    orb1.style.background = s.color + '14';
+
+    /* Cover mode */
+    wrapper.classList.toggle('cover', idx === 0);
+  }
+
+  /* ── Socket.io connection ───────────────────────────────────────── */
+  const socket = io(window.location.origin, {
+    reconnection: true,
+    reconnectionDelay: 2000,
+    timeout: 5000,
+  });
+
+  socket.on('connect', () => {
+    socket.emit('identify', 'audience');
+    statusDot.classList.add('live');
+    statusLbl.textContent = 'EN VIVO';
+    updateUI(currentIdx, false);
+  });
+
+  socket.on('disconnect', () => {
+    statusDot.classList.remove('live');
+    statusLbl.textContent = 'Reconectando';
+  });
+
+  socket.on('slide_sync', ({ index }) => {
+    if (index !== undefined) updateUI(index, true);
+  });
+
+  /* Initial render */
+  updateUI(0, false);
+</script>
+</body>
+</html>

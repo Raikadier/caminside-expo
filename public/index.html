@@ -18,14 +18,30 @@
   <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/highlight.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
 
+<!-- CONF: Iris transition overlays -->
+<div id="iris-overlay"></div>
+<div id="iris-ring"></div>
+
+<!-- CONF: Stat Card overlay (una por sección) -->
+<div id="conf-stat-overlay">
+  <div class="cso-eyebrow">PRÓXIMA SECCIÓN</div>
+  <div id="cso-number"></div>
+  <div id="cso-label"></div>
+  <div id="cso-sub"></div>
+  <div id="cso-dots"></div>
+</div>
+
 <div id="ws-hud">
   <div id="ws-dot"></div>
   <span id="ws-label">Conectando...</span>
+  <span id="ws-latency" style="opacity:0;font-size:0.5rem;margin-left:4px;transition:opacity 0.4s"></span>
+  <span id="ws-audience" style="opacity:0;font-size:0.5rem;transition:opacity 0.4s"></span>
 </div>
 
 <div class="reveal">
@@ -76,6 +92,15 @@
         </div>
 
         <div class="cover-group-badge">Grupo de Exposición N° 2 · 7 Integrantes</div>
+      </div>
+
+      <!-- CONF: QR de audiencia — posicionado en esquina inferior derecha del slide -->
+      <div id="cover-qr-wrap" style="opacity:0;transition:opacity 0.6s 1s">
+        <div class="cover-qr-inner">
+          <div id="cover-qr"></div>
+        </div>
+        <div class="cover-qr-label">SEGUIR EN VIVO</div>
+        <div id="cover-qr-url" class="cover-qr-url"></div>
       </div>
     </section>
 

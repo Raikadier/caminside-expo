@@ -4,8 +4,6 @@ const SOCKET = (() => {
   const handlers = {};
 
   function connect() {
-    // En Vercel (serverless) no hay socket server — intentamos conectar pero
-    // limitamos los reintentos para no saturar la consola.
     const isVercel = window.location.hostname.endsWith('.vercel.app');
 
     socket = io(window.location.origin, {
@@ -21,6 +19,7 @@ const SOCKET = (() => {
       setHUD(true);
       dispatch('__connected', {});
       log('sistema', 'WebSocket conectado — telemetría activa');
+      startLatencyLoop();
     });
 
     socket.on('connect_error', () => {
@@ -40,7 +39,7 @@ const SOCKET = (() => {
     });
 
     // ── Contador de dispositivos conectados ──────────────────────────────
-    socket.on('device_counts', ({ web, mobile }) => {
+    socket.on('device_counts', ({ web, mobile, audience }) => {
       const label = document.getElementById('ws-label');
       if (!label) return;
       if (mobile > 0) {
@@ -48,31 +47,53 @@ const SOCKET = (() => {
       } else {
         label.textContent = 'Esperando móvil...';
       }
+      // Mostrar contador de audiencia si hay alguien conectado
+      const audEl = document.getElementById('ws-audience');
+      if (audEl) {
+        audEl.textContent  = audience > 0 ? `· ${audience} en sala` : '';
+        audEl.style.opacity = audience > 0 ? '0.7' : '0';
+      }
     });
+
+    // ── Latencia round-trip ──────────────────────────────────────────────
+    socket.on('latency_pong', (t0) => {
+      const ms    = Date.now() - t0;
+      const latEl = document.getElementById('ws-latency');
+      if (latEl) {
+        latEl.textContent  = `${ms}ms`;
+        latEl.style.color  = ms < 20 ? '#22c55e' : ms < 60 ? '#eab308' : '#ef4444';
+        latEl.style.opacity = '0.8';
+      }
+    });
+  }
+
+  // ── Ping loop ────────────────────────────────────────────────────────────
+  function startLatencyLoop() {
+    setInterval(() => {
+      if (socket && socket.connected) socket.emit('latency_ping', Date.now());
+    }, 3000);
   }
 
   // ── API pública ──────────────────────────────────────────────────────────
 
-  /** Registra un handler para un evento de telemetría. */
   function on(evento, cb) {
     if (!handlers[evento]) handlers[evento] = [];
     handlers[evento].push(cb);
   }
 
-  /**
-   * Emite un evento directo al servidor (web → server).
-   * Usado por app.js para notificar slide changes al móvil.
-   */
   function emit(evento, data) {
     if (socket && socket.connected) socket.emit(evento, data);
   }
 
-  /** Log interno — despacha a los listeners de '__log'. */
   function log(origin, msg, type = 'info') {
     const ts    = new Date().toLocaleTimeString();
     const entry = { ts, origin, msg, type };
     if (handlers['__log']) handlers['__log'].forEach(fn => fn(entry));
     return entry;
+  }
+
+  function dispatch(ev, data) {
+    if (handlers[ev]) handlers[ev].forEach(fn => fn(data));
   }
 
   function setHUD(connected, customLabel = null) {
