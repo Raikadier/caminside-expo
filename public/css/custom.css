@@ -273,8 +273,11 @@ html, body {
 
 /* FIX ①: el stack y sus wrappers distribuyen el espacio equitativamente */
 .hal-stack { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-/* Cada wrapper dentro del hal-stack toma parte igual del espacio disponible */
-.hal-stack > div { flex: 1; display: flex; flex-direction: column; }
+/* Cada wrapper dentro del hal-stack toma parte igual del espacio disponible.
+   IMPORTANTE: align-items:stretch explícito — el JS usaba lc-node-wrap (que tiene
+   align-items:center) causando que las layers sólo tuvieran ~61% del ancho de columna. */
+.hal-stack > div,
+.hal-node-wrap { flex: 1; display: flex; flex-direction: column; align-items: stretch; }
 .hal-layer {
   display: flex; align-items: center; gap: 14px;
   background: var(--bg-card);
@@ -344,6 +347,15 @@ html, body {
 .hal-info-col .terminal-panel { flex: 1; min-height: 0; }
 .hal-info-col .tp-body { max-height: none; } /* deja que crezca con el espacio disponible */
 
+/* PROP-6: terminal ISP no tiene flex:1 → espacio muerto debajo del WB slider.
+   Mismo patrón que el fix PROP-4 del terminal HAL. */
+.isp-panel-col .terminal-panel { flex: 1; min-height: 0; }
+.isp-panel-col .tp-body { max-height: none; }
+
+/* PROP-8: terminal de lifecycle sin flex:1 → espacio muerto debajo del panel hw. */
+.lc-right-col .terminal-panel { flex: 1; min-height: 0; }
+.lc-right-col .tp-body { max-height: none; }
+
 .hal-active-panel { flex-shrink: 0; }
 .hap-label { font-family: var(--mono); font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 6px; }
 .hap-name  { font-size: 1rem; font-weight: 700; color: var(--cyan); margin-bottom: 6px; }
@@ -361,11 +373,19 @@ html, body {
 .isp-panel-col { flex: 0.85; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 
 .bayer-panel .bayer-hd { font-family: var(--mono); font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 8px; }
-/* PROP-2: Fijar la altura de la fila del grid en lugar de aspect-ratio:1.
-   Con aspect-ratio:1 las celdas miden ~58px → el grid ocupa ~464px de alto
-   y empuja el slider WB y el terminal fuera del área visible (overflow:hidden).
-   grid-auto-rows: 14px mantiene las celdas cuadradas a un tamaño razonable. */
-#bayer-grid { display: grid; grid-template-columns: repeat(8,1fr); grid-auto-rows: 14px; gap: 2px; margin-bottom: 10px; }
+/* PROP-2 rev3: celdas cuadradas centradas (36×36 px).
+   Con 1fr las celdas eran barras (66×14px).
+   Con 20px quedaban muy pequeñas y a la izquierda.
+   36px da un grid de 302×302px (~85% del ancho del panel) — bien centrado,
+   legible como patrón CFA Bayer para la audiencia. */
+#bayer-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 36px);
+  grid-auto-rows: 36px;
+  gap: 2px;
+  margin: 0 auto 10px; /* centra el grid en el panel */
+  width: fit-content;
+}
 .bc {
   border-radius: 2px;
   transition: background 0.5s ease;
@@ -482,14 +502,23 @@ html, body {
 .lifecycle-layout {
   flex: 1; display: flex; gap: 20px; overflow: hidden; min-height: 0;
 }
-.lc-diagram-col { flex: 1; display: flex; align-items: center; justify-content: center; }
+/* PROP-7: diagram-col centra el contenido → nodos flotan al medio con espacio
+   muerto arriba y abajo. Fix: flex-direction column + stretch para que .lc-diagram
+   llene el alto; space-evenly distribuye los 4 nodos uniformemente. */
+.lc-diagram-col {
+  flex: 1; display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 .lc-right-col { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
 
 .lc-diagram {
   display: flex; flex-direction: column; align-items: center;
-  gap: 4px; width: 100%;
+  gap: 0; width: 100%;
+  flex: 1;                   /* llena el alto de lc-diagram-col */
+  justify-content: flex-start; /* distribución la controlan los node-wrap */
 }
-.lc-node-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.lc-node-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
 .lc-node {
   width: 100%; display: flex; align-items: center; gap: 12px;
   background: var(--bg-card); border: 1px solid var(--border);
@@ -518,7 +547,7 @@ html, body {
 .lc-state-name { font-size: 0.72rem; font-weight: 600; font-family: var(--mono); color: var(--text); }
 .lc-node.active .lc-state-name { color: var(--node-color, var(--cyan)); }
 .lc-state-desc { font-size: 0.52rem; color: var(--text-muted); }
-.lc-connector { width: 2px; height: 16px; background: var(--border); margin: 0 auto; }
+.lc-connector { flex: 1; width: 2px; min-height: 12px; background: var(--border); margin: 0 auto; }
 .lc-connector.flowing {
   background: linear-gradient(to bottom, var(--node-color, var(--cyan)), transparent);
   animation: flowDown 0.8s ease forwards;
@@ -667,7 +696,11 @@ html, body {
 .mlkit-layout {
   flex: 1; display: flex; gap: 16px; overflow: hidden; min-height: 0;
 }
-.mlkit-left-col { flex: 0.85; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+/* PROP-10: mlkit-left-col tiene 602px disponibles pero el yuv-panel + pasos sólo
+   usan ~250px → espacio muerto en la mitad inferior izquierda.
+   justify-content: space-between sube el yuv-panel arriba y baja los pasos
+   al fondo, llenando visualmente toda la columna. */
+.mlkit-left-col { flex: 0.85; display: flex; flex-direction: column; gap: 10px; overflow: hidden; justify-content: space-between; }
 .mlkit-right-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 .yuv-panel .yuv-hd-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

@@ -49,7 +49,7 @@
     stack.innerHTML = '';
     LAYERS.forEach((l, i) => {
       const wrap = document.createElement('div');
-      wrap.className = 'lc-node-wrap'; // reuse lifecycle wrap for connector
+      wrap.className = 'hal-node-wrap'; // clase propia — no reusar lc-node-wrap (colisión de estilos)
 
       const node = document.createElement('div');
       node.className = 'hal-layer';

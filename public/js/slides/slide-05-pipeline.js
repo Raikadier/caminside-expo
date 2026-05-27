@@ -42,7 +42,7 @@
       sensorY: H * 0.5,
       sensorR: Math.min(W, H) * 0.085,
       forkX:   W * 0.30,
-      endX:    W * 0.80,
+      endX:    W * 0.65, /* PROP-9: 0.80 cortaba las etiquetas de texto en el borde derecho del canvas */
       ys: [H * 0.20, H * 0.5, H * 0.80],
     };
   }
