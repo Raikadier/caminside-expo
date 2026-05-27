@@ -133,13 +133,19 @@
     ctx.stroke();
     ctx.restore();
 
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.max(9, H * 0.07)}px 'JetBrains Mono', monospace`;
+    /* PROP-13: texto del sensor escalado al radio del círculo (no a H).
+       Antes: H*0.07=29px → "SENSOR" ~102px > diámetro 70px → desborde.
+       Ahora: sensorR*0.43 ≈ 15px → "SENSOR" ~54px < 70px → dentro del círculo. */
+    const sSz1 = Math.max(7, L.sensorR * 0.43);  /* "SENSOR"  ~15px */
+    const sSz2 = Math.max(6, L.sensorR * 0.34);  /* "ÓPTICO"  ~12px */
+    const sLblH = sSz1 + 3 + sSz2;               /* alto total del bloque */
     ctx.textAlign = 'center';
-    ctx.fillText('SENSOR', L.sensorX, L.sensorY - 4);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${sSz1}px 'JetBrains Mono', monospace`;
+    ctx.fillText('SENSOR', L.sensorX, L.sensorY - sLblH / 2 + sSz1);
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = `${Math.max(7, H * 0.055)}px 'JetBrains Mono', monospace`;
-    ctx.fillText('ÓPTICO', L.sensorX, L.sensorY + 14);
+    ctx.font = `${sSz2}px 'JetBrains Mono', monospace`;
+    ctx.fillText('ÓPTICO', L.sensorX, L.sensorY + sLblH / 2);
 
     /* --- Main stem sensor → fork --- */
     ctx.beginPath();
@@ -192,15 +198,20 @@
       ctx.stroke();
       ctx.restore();
 
-      /* Label a la derecha del círculo */
+      /* PROP-13: label escalado al radio del círculo endpoint (endR), no a H.
+         Antes: H*0.058=24px → gap baseline 15px < font 24px → main/sub se pisaban.
+         Ahora: endR*0.58=~14px, bloque centrado en y → 3px de margen entre líneas. */
+      const mainSz = Math.max(7, endR * 0.58);          /* ~14px */
+      const subSz  = Math.max(6, endR * 0.46);          /* ~11px */
+      const lblH   = mainSz + 3 + subSz;                /* alto del bloque ~28px */
       const lx = L.endX + endR + 10;
       ctx.textAlign   = 'left';
       ctx.fillStyle   = actv ? s.color : 'rgba(255,255,255,0.25)';
-      ctx.font        = `bold ${Math.max(8, H * 0.058)}px 'JetBrains Mono', monospace`;
-      ctx.fillText(s.label, lx, y - 5);
+      ctx.font        = `bold ${mainSz}px 'JetBrains Mono', monospace`;
+      ctx.fillText(s.label, lx, y - lblH / 2 + mainSz); /* baseline centrado arriba */
       ctx.fillStyle   = actv ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)';
-      ctx.font        = `${Math.max(7, H * 0.047)}px 'JetBrains Mono', monospace`;
-      ctx.fillText(s.sub, lx, y + 10);
+      ctx.font        = `${subSz}px 'JetBrains Mono', monospace`;
+      ctx.fillText(s.sub, lx, y + lblH / 2);             /* baseline centrado abajo */
 
       /* Partículas */
       if (actv) {
