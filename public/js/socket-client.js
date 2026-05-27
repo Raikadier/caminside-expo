@@ -4,10 +4,15 @@ const SOCKET = (() => {
   const handlers = {};
 
   function connect() {
+    // En Vercel (serverless) no hay socket server — intentamos conectar pero
+    // limitamos los reintentos para no saturar la consola.
+    const isVercel = window.location.hostname.endsWith('.vercel.app');
+
     socket = io(window.location.origin, {
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: Infinity,
+      reconnection: !isVercel,
+      reconnectionDelay: 2000,
+      reconnectionAttempts: isVercel ? 0 : Infinity,
+      timeout: 5000,
     });
 
     // ── Al conectar: identificarse como cliente web ──────────────────────
@@ -16,6 +21,10 @@ const SOCKET = (() => {
       setHUD(true);
       dispatch('__connected', {});
       log('sistema', 'WebSocket conectado — telemetría activa');
+    });
+
+    socket.on('connect_error', () => {
+      if (isVercel) setHUD(false, 'Modo presentación');
     });
 
     socket.on('disconnect', () => {
@@ -66,12 +75,12 @@ const SOCKET = (() => {
     return entry;
   }
 
-  function setHUD(connected) {
+  function setHUD(connected, customLabel = null) {
     const hud   = document.getElementById('ws-hud');
     const label = document.getElementById('ws-label');
     if (!hud) return;
     hud.classList.toggle('connected', connected);
-    if (!connected) label.textContent = 'Reconectando...';
+    if (!connected) label.textContent = customLabel || 'Reconectando...';
   }
 
   connect();
