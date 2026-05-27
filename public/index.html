@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cámara Android: Bajo el Capó</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/plugin/highlight/highlight.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="ws-hud">
+  <div id="ws-dot"></div>
+  <span id="ws-label">Conectando...</span>
+</div>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ══════════════════════ SLIDE 0: PORTADA ══════════════════════ -->
+    <section data-state="s-cover">
+      <div class="cover-wrap">
+        <div class="cover-eyebrow">
+          <span>Universidad Popular del Cesar</span>
+          <span class="dot-sep">·</span>
+          <span>Ingeniería de Sistemas</span>
+          <span class="dot-sep">·</span>
+          <span>Programación Móvil · Mayo 2026</span>
+        </div>
+
+        <div class="cover-hero">
+          <h1 class="cover-title">
+            <span class="ct-cam">CÁMARA</span><span class="ct-inside"> ANDROID</span>
+          </h1>
+          <p class="cover-undertitle">Bajo el Capó</p>
+          <div class="cover-scanline"></div>
+        </div>
+
+        <p class="cover-tagline">
+          Del silicio al widget — cómo Android orquesta cada fotón que captura tu cámara
+        </p>
+
+        <div class="cover-pillars">
+          <div class="pillar"><span class="pillar-icon">🔌</span><span>HAL · Driver Stack</span></div>
+          <div class="pillar-sep"></div>
+          <div class="pillar"><span class="pillar-icon">⚡</span><span>ISP · Bayer Matrix</span></div>
+          <div class="pillar-sep"></div>
+          <div class="pillar"><span class="pillar-icon">📷</span><span>CameraX · Pipeline</span></div>
+          <div class="pillar-sep"></div>
+          <div class="pillar"><span class="pillar-icon">🤖</span><span>ML Kit · Edge AI</span></div>
+        </div>
+
+        <div class="cover-console">
+          <div class="cc-bar">
+            <span class="cc-dots"><i></i><i></i><i></i></span>
+            <span class="cc-title">telemetria@caminside — bash</span>
+          </div>
+          <div class="cc-body" id="cover-log">
+            <div class="cc-line">$ ./start_caminside.sh</div>
+            <div class="cc-line dim">> Iniciando servidor de telemetría en LAN...</div>
+          </div>
+        </div>
+
+        <div class="cover-group-badge">Grupo de Exposición N° 2 · 7 Integrantes</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 1: HAL ══════════════════════ -->
+    <section data-state="s-hal">
+      <header class="slide-hd">
+        <h2>Arquitectura de Capas del SO Móvil</h2>
+        <p>Del widget Flutter hasta el silicio — el viaje completo de una llamada a la cámara</p>
+      </header>
+      <div class="hal-layout">
+        <div class="hal-stack-col">
+          <div class="hal-stack" id="hal-stack"></div>
+        </div>
+        <div class="hal-info-col">
+          <div class="glass-panel hal-active-panel" id="hal-active-info">
+            <div class="hap-label">CAPA ACTIVA</div>
+            <div class="hap-name" id="hap-name">—</div>
+            <div class="hap-desc" id="hap-desc">Selecciona una capa o espera datos del móvil</div>
+          </div>
+          <div class="terminal-panel">
+            <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>CameraManager · HAL Characteristics</span></div>
+            <div class="tp-body" id="log-hal"><div class="tl dim">> Esperando datos del CameraManager...</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 2: ISP ══════════════════════ -->
+    <section data-state="s-isp">
+      <header class="slide-hd">
+        <h2>Image Signal Processor <span class="hd-muted">(ISP)</span></h2>
+        <p>El cerebro oculto — de fotones crudos a píxeles procesados en milisegundos</p>
+      </header>
+      <div class="isp-layout">
+        <div class="isp-three-col">
+          <div class="three-wrap" id="three-isp"></div>
+          <div class="three-caption">Módulo de cámara despiezado · Three.js WebGL</div>
+        </div>
+        <div class="isp-panel-col">
+          <div class="glass-panel bayer-panel">
+            <div class="bayer-hd">SENSOR RAW · Patrón de Bayer</div>
+            <div id="bayer-grid"></div>
+            <div class="isp-pipeline-steps">
+              <span class="isp-step" id="step-demo">Demosaicing</span>
+              <span class="step-sep">→</span>
+              <span class="isp-step" id="step-nr">Noise Reduction</span>
+              <span class="step-sep">→</span>
+              <span class="isp-step" id="step-wb">White Balance</span>
+              <span class="step-sep">→</span>
+              <span class="isp-step" id="step-tone">Tonemapping</span>
+            </div>
+            <div class="bayer-out-row">
+              <div class="rgb-swatch" id="rgb-swatch"></div>
+              <span>Output → <strong id="rgb-temp-label">5500K · Neutro</strong></span>
+            </div>
+          </div>
+          <div class="glass-panel wb-panel">
+            <div class="wb-row">
+              <span class="wb-hd">Balance de Blancos</span>
+              <span class="wb-val" id="wb-value">5500K</span>
+            </div>
+            <div class="wb-slider-row">
+              <span class="wb-pole">❄ 2500K</span>
+              <input type="range" id="wb-slider" min="2500" max="8000" value="5500">
+              <span class="wb-pole">☀ 8000K</span>
+            </div>
+          </div>
+          <div class="terminal-panel">
+            <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>ISP Pipeline · Telemetría en vivo</span></div>
+            <div class="tp-body" id="log-isp"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 3: APIs ══════════════════════ -->
+    <section data-state="s-apis">
+      <header class="slide-hd compact-hd">
+        <h2>Evolución de las APIs de Cámara</h2>
+        <p>Del Platform Channel de 280 líneas al Flutter Camera Package de 35 — abstracción que libera</p>
+      </header>
+      <div class="apis-stats-bar">
+        <div class="stat-chip danger-chip"><span class="chip-num">~280</span><span class="chip-lbl">Platform Channel</span></div>
+        <div class="stat-arrow-big">→</div>
+        <div class="stat-chip success-chip"><span class="chip-num">~35</span><span class="chip-lbl">Camera Package</span></div>
+        <div class="stat-chip accent-chip"><span class="chip-num">−87%</span><span class="chip-lbl">Menos código</span></div>
+      </div>
+      <div class="apis-layout">
+        <div class="code-col danger-col">
+          <div class="code-col-hd"><span class="col-dot danger-dot"></span>Platform Channel · Camera2 nativo</div>
+          <div class="code-scroll"><pre><code class="language-dart" id="code-old"></code></pre></div>
+        </div>
+        <div class="vs-divider">VS</div>
+        <div class="code-col success-col">
+          <div class="code-col-hd"><span class="col-dot success-dot"></span>Flutter Camera Package v0.10+</div>
+          <div class="code-scroll"><pre><code class="language-dart" id="code-new"></code></pre></div>
+        </div>
+      </div>
+      <div class="apis-footer-row">
+        <button class="btn-primary" id="btn-init-camera">▶ Simular inicialización</button>
+        <div class="terminal-panel flex-term">
+          <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>Comparativa de inicialización</span></div>
+          <div class="tp-body" id="log-apis"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 4: LIFECYCLE ══════════════════════ -->
+    <section data-state="s-lifecycle">
+      <header class="slide-hd">
+        <h2>Ciclo de Vida · Flutter AppLifecycleState</h2>
+        <p>La cámara es un recurso exclusivo — la sincronización evita bloqueos y fugas de memoria</p>
+      </header>
+      <div class="lifecycle-layout">
+        <div class="lc-diagram-col">
+          <div class="lc-diagram" id="lifecycle-diagram"></div>
+        </div>
+        <div class="lc-right-col">
+          <div class="glass-panel cam-hw-panel" id="cam-hw-panel">
+            <div class="hw-icon" id="hw-icon">📷</div>
+            <div class="hw-info">
+              <div class="hw-label">Hardware de Cámara</div>
+              <div class="hw-state" id="hw-state">SESIÓN ACTIVA</div>
+              <div class="hw-detail" id="hw-detail">CameraController.initialize() completado</div>
+            </div>
+            <div class="hw-pulse" id="hw-pulse"></div>
+          </div>
+          <div class="terminal-panel">
+            <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>WidgetsBindingObserver · Eventos del OS</span></div>
+            <div class="tp-body" id="log-lifecycle"><div class="tl dim">> Monitorizando AppLifecycleState...</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 5: PIPELINE ══════════════════════ -->
+    <section data-state="s-pipeline">
+      <header class="slide-hd compact-hd">
+        <h2>Pipeline de Captura Simultánea</h2>
+        <p>Un sensor, tres superficies concurrentes e independientes en memoria</p>
+      </header>
+      <div class="pipeline-layout">
+        <canvas id="pipeline-canvas"></canvas>
+        <div class="surface-row">
+          <div class="surf-card" data-surface="preview">
+            <div class="surf-glow" style="--gc:#eab308"></div>
+            <div class="surf-hd"><span class="surf-icon">🖥</span><span class="surf-name">Preview Surface</span><span class="surf-badge" style="--bc:#eab308">LIVE</span></div>
+            <div class="surf-specs">30–60 FPS · GPU · SurfaceTexture</div>
+            <div class="surf-meter"><div class="surf-fill" style="--fc:#eab308;width:0%"></div></div>
+          </div>
+          <div class="surf-card" data-surface="capture">
+            <div class="surf-glow" style="--gc:#f97316"></div>
+            <div class="surf-hd"><span class="surf-icon">📸</span><span class="surf-name">Capture Surface</span><span class="surf-badge" style="--bc:#f97316">JPEG</span></div>
+            <div class="surf-specs">Resolución máxima · Disco · Compresión</div>
+            <div class="surf-meter"><div class="surf-fill" style="--fc:#f97316;width:0%"></div></div>
+          </div>
+          <div class="surf-card" data-surface="analysis">
+            <div class="surf-glow" style="--gc:#22c55e"></div>
+            <div class="surf-hd"><span class="surf-icon">📡</span><span class="surf-name">Analysis Surface</span><span class="surf-badge" style="--bc:#22c55e">YUV</span></div>
+            <div class="surf-specs">YUV_420_888 · RAM · Hilo secundario</div>
+            <div class="surf-meter"><div class="surf-fill" style="--fc:#22c55e;width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="terminal-panel pipeline-log">
+        <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>Surfaces · Estado del pipeline en tiempo real</span></div>
+        <div class="tp-body" id="log-pipeline"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 6: EXTENSIONS ══════════════════════ -->
+    <section data-state="s-extensions">
+      <header class="slide-hd compact-hd">
+        <h2>API de Extensiones CameraX</h2>
+        <p>Acceso nativo a los algoritmos propietarios del fabricante — de genérico a élite</p>
+      </header>
+      <div class="ext-layout">
+        <div class="ext-card ext-old-card" id="ext-old">
+          <div class="ext-card-hd"><span class="ext-tag ext-tag-danger">MÉTODO ANTIGUO</span><span class="ext-sub">Apps de terceros (pre-2022)</span></div>
+          <div class="ext-visual-old">
+            <div class="old-noise"></div>
+            <div class="old-label">Screenshot del Preview</div>
+          </div>
+          <ul class="ext-list">
+            <li class="neg">✗ &nbsp;Buffer capturado del display</li>
+            <li class="neg">✗ &nbsp;Sin procesamiento avanzado del ISP</li>
+            <li class="neg">✗ &nbsp;Sin Modo Noche ni HDR nativo</li>
+            <li class="neg">✗ &nbsp;Calidad inferior a la app del sistema</li>
+          </ul>
+          <div class="ext-meter-row"><span>Calidad</span><div class="ext-meter"><div class="ext-mfill" style="width:28%;background:#ef4444"></div></div><span class="danger-text">28%</span></div>
+        </div>
+
+        <div class="ext-vs-col"><div class="vs-badge">VS</div></div>
+
+        <div class="ext-card ext-new-card" id="ext-new">
+          <div class="ext-card-hd"><span class="ext-tag ext-tag-success">EXTENSIÓN NATIVA</span><span class="ext-sub">CameraX Extensions API</span></div>
+          <div class="ext-visual-new">
+            <div class="new-glow-grid"></div>
+            <div class="new-label">Pipeline ISP Completo</div>
+          </div>
+          <ul class="ext-list">
+            <li class="pos">✓ &nbsp;Acceso directo a la HAL del fabricante</li>
+            <li class="pos">✓ &nbsp;Pipeline ISP completo en hardware</li>
+            <li class="pos">✓ &nbsp;HDR, Modo Noche, Bokeh nativo</li>
+            <li class="pos">✓ &nbsp;Idéntico resultado a la app del sistema</li>
+          </ul>
+          <div class="ext-meter-row"><span>Calidad</span><div class="ext-meter"><div class="ext-mfill" style="width:94%;background:#22c55e"></div></div><span class="success-text">94%</span></div>
+        </div>
+      </div>
+      <div class="terminal-panel" style="margin-top:6px">
+        <div class="tp-bar"><span class="tp-dots"><i></i><i></i><i></i></span><span>Extensiones · Modo activo</span></div>
+        <div class="tp-body" id="log-ext"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ SLIDE 7: ML KIT ══════════════════════ -->
+    <section data-state="s-mlkit">
+      <header class="slide-hd compact-hd">
+        <h2>Visión por Computadora en el Edge</h2>
+        <p>Google ML Kit · YUV_420_888 · Inferencia en dispositivo a 30 FPS sin servidor externo</p>
+      </header>
+      <div class="mlkit-layout">
+        <div class="mlkit-left-col">
+          <div class="glass-panel yuv-panel">
+            <div class="yuv-hd-row"><span class="yuv-badge">YUV_420_888</span><span class="yuv-sub">Formato nativo de ImageAnalysis</span></div>
+            <div class="yuv-planes">
+              <div class="yuv-plane yp">
+                <div class="yuv-pl-label">Y — Luminancia</div>
+                <div class="yuv-pl-grid" id="yuv-y-grid"></div>
+                <div class="yuv-ml-tag">← ML Kit usa este canal</div>
+              </div>
+              <div class="yuv-uv-col">
+                <div class="yuv-plane up"><div class="yuv-pl-label">U — Cb</div><div class="yuv-pl-grid small-grid" id="yuv-u-grid"></div></div>
+                <div class="yuv-plane vp"><div class="yuv-pl-label">V — Cr</div><div class="yuv-pl-grid small-grid" id="yuv-v-grid"></div></div>
+                <div class="yuv-sub-tag">Submuestreo 4:2:0</div>
+              </div>
+            </div>
+            <div class="yuv-eff-row">
+              <span>Reducción vs RGB:</span>
+              <div class="eff-bar"><div class="eff-fill"></div></div>
+              <span class="eff-val">−50%</span>
+            </div>
+          </div>
+          <div class="glass-panel mlkit-steps">
+            <div class="mks-title">Pipeline de inferencia</div>
+            <div class="mks-row">
+              <div class="mks-step" id="mks-1">CameraImage</div>
+              <span class="mks-arrow">→</span>
+              <div class="mks-step" id="mks-2">planes[0]</div>
+              <span class="mks-arrow">→</span>
+              <div class="mks-step" id="mks-3">ML Kit</div>
+              <span class="mks-arrow">→</span>
+              <div class="mks-step" id="mks-4">JSON Socket</div>
+            </div>
+          </div>
+        </div>
+        <div class="mlkit-right-col">
+          <div class="mlkit-terminal">
+            <div class="mlt-bar">
+              <span class="tp-dots"><i></i><i></i><i></i></span>
+              <span class="mlt-title">ML Kit · Detección en tiempo real</span>
+              <span class="mlkit-fps" id="mlkit-fps">— FPS</span>
+            </div>
+            <div class="mlt-body" id="terminal-mlkit">
+              <div class="mlt-line">> Inicializando Google ML Kit...</div>
+              <div class="mlt-line dim">> Cargando modelo BarcodeScanner...</div>
+              <div class="mlt-line dim">> Vinculando ImageAnalysis pipeline...</div>
+              <div class="mlt-line dim">> Apunta la cámara a un código QR...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="js/socket-client.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/three-scene.js"></script>
+<script src="js/slides/slide-01-hal.js"></script>
+<script src="js/slides/slide-02-isp.js"></script>
+<script src="js/slides/slide-03-apis.js"></script>
+<script src="js/slides/slide-04-lifecycle.js"></script>
+<script src="js/slides/slide-05-pipeline.js"></script>
+<script src="js/slides/slide-06-extensions.js"></script>
+<script src="js/slides/slide-07-mlkit.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
