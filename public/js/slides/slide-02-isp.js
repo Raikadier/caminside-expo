@@ -137,14 +137,121 @@
     }
   });
 
+  /* ── Etiquetas didácticas 3D ───────────────────────────── */
+  const CAM_PARTS = [
+    { id: 'optica', title: 'Sistema Óptico',  sub: 'Conjunto de lentes' },
+    { id: 'sensor', title: 'Sensor CMOS',     sub: 'Fotones → carga eléctrica' },
+    { id: 'isp',    title: 'ISP · SoC',       sub: 'Procesamiento digital' },
+    { id: 'pcb',    title: 'PCB',             sub: 'I²C · MIPI CSI-2' },
+  ];
+  /* Y fija de cada etiqueta como fracción de la altura del canvas */
+  const LBL_Y_FRAC = [0.17, 0.41, 0.61, 0.80];
+
+  let labelOverlay = null, labelRaf = null;
+  const labelDots = {}, labelBadges = {}, labelLines = {};
+
+  function buildLabelOverlay() {
+    const container = document.getElementById('three-isp');
+    if (!container || labelOverlay) return;
+
+    labelOverlay = document.createElement('div');
+    labelOverlay.id = 'cam3d-overlay';
+    container.appendChild(labelOverlay);
+
+    /* SVG capa para las líneas de conexión */
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'cam3d-svg';
+    labelOverlay.appendChild(svg);
+
+    CAM_PARTS.forEach(({ id, title, sub }) => {
+      /* Línea punteada anchor → badge */
+      const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      ln.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(ln);
+      labelLines[id] = ln;
+
+      /* Punto de anclaje 3D (se mueve con la rotación) */
+      const dot = document.createElement('div');
+      dot.className = 'cam3d-dot';
+      labelOverlay.appendChild(dot);
+      labelDots[id] = dot;
+
+      /* Badge de texto fijo a la derecha */
+      const badge = document.createElement('div');
+      badge.className = 'cam3d-badge';
+      badge.innerHTML =
+        `<span class="c3b-title">${title}</span>` +
+        `<span class="c3b-sub">${sub}</span>`;
+      labelOverlay.appendChild(badge);
+      labelBadges[id] = badge;
+    });
+  }
+
+  function updateLabelPositions() {
+    const container = document.getElementById('three-isp');
+    if (!container || !labelOverlay ||
+        typeof CamInsideThree === 'undefined' || !CamInsideThree.isReady()) return;
+
+    const W = container.clientWidth;
+    const H = container.clientHeight;
+    const pos = CamInsideThree.getLabelPositions(container);
+
+    CAM_PARTS.forEach(({ id }, i) => {
+      const p     = pos[id];
+      const dot   = labelDots[id];
+      const badge = labelBadges[id];
+      const line  = labelLines[id];
+      if (!p || !dot || !badge || !line) return;
+
+      const visible = !p.hidden;
+      const alpha   = visible ? 1 : 0;
+
+      /* Dot: centrado en la proyección 3D */
+      dot.style.left    = `${p.x - 4}px`;
+      dot.style.top     = `${p.y - 4}px`;
+      dot.style.opacity = alpha;
+
+      /* Badge: Y fija, alineado a la derecha del canvas */
+      const lblY = H * LBL_Y_FRAC[i];
+      badge.style.top     = `${lblY}px`;   /* CSS translateY(-50%) centra verticalmente */
+      badge.style.opacity = visible ? 1 : 0;
+
+      /* Línea: desde el dot hasta el borde izquierdo del badge */
+      const badgeW   = badge.offsetWidth  || 110;
+      const badgeH   = badge.offsetHeight || 30;
+      const lineEndX = W - badgeW - 16;     /* 16 = gap de margen derecho */
+      const lineEndY = lblY;                /* Y central del badge */
+      line.setAttribute('x1', p.x);
+      line.setAttribute('y1', p.y);
+      line.setAttribute('x2', lineEndX);
+      line.setAttribute('y2', lineEndY);
+      line.setAttribute('stroke', visible ? 'rgba(0,240,255,0.45)' : 'none');
+      line.setAttribute('stroke-width', '1');
+    });
+  }
+
+  function startLabelLoop() {
+    if (labelRaf) return;
+    (function tick() { updateLabelPositions(); labelRaf = requestAnimationFrame(tick); })();
+  }
+  function stopLabelLoop() {
+    if (labelRaf) { cancelAnimationFrame(labelRaf); labelRaf = null; }
+  }
+
   /* ── Slide enter / leave ───────────────────────────────── */
   document.addEventListener('caminside:slide', ({ detail }) => {
     if (detail.index === 2) {
       /* Three.js init ocurre en app.js; aquí solo arrancamos efectos */
       addLog('ISP Pipeline activo — analizando flujo de datos', 'info');
       startStepCycle();
+      /* Crear overlay la primera vez; arrancar loop de proyección */
+      if (typeof CamInsideThree !== 'undefined' && CamInsideThree.isReady()) {
+        buildLabelOverlay();
+        startLabelLoop();
+      }
     } else {
       stopStepCycle();
+      stopLabelLoop();
     }
   });
 

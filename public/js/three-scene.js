@@ -7,6 +7,7 @@ const CamInsideThree = (() => {
   let dataParticles = [];
   let ispActive = false, ispIntensity = 0;
   let ready = false;
+  let labelAnchors = {};   /* Object3D hijos de moduleGroup — para proyección 3D→2D */
 
   /* ── Init ──────────────────────────────────────────────── */
   function init(container) {
@@ -138,8 +139,41 @@ const CamInsideThree = (() => {
       moduleGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), traceMat));
     }
 
+    /* ── Label anchors — puntos 3D invisibles, rotan con el módulo ── */
+    /* x positivo = borde derecho del objeto (se proyecta a la derecha en pantalla) */
+    [
+      { id: 'optica', pos: [0.88, 1.10, 0.0]  },  /* borde der. del barril de lente */
+      { id: 'sensor', pos: [0.72, 0.04, 0.0]  },  /* borde der. del sensor de imagen */
+      { id: 'isp',    pos: [0.82, -0.49, 0.0] },  /* borde der. del SoC/ISP         */
+      { id: 'pcb',    pos: [1.22, -0.86, 0.0] },  /* borde der. de la PCB            */
+    ].forEach(({ id, pos }) => {
+      const obj = new THREE.Object3D();
+      obj.position.set(...pos);
+      moduleGroup.add(obj);
+      labelAnchors[id] = obj;
+    });
+
     moduleGroup.position.y = -0.15;
     scene.add(moduleGroup);
+  }
+
+  /* ── Proyectar anclas 3D al espacio de pantalla ─────────── */
+  function getLabelPositions(container) {
+    if (!cam || !container || !Object.keys(labelAnchors).length) return {};
+    const W = container.clientWidth  || 1;
+    const H = container.clientHeight || 1;
+    const result = {};
+    const wp = new THREE.Vector3();
+    Object.entries(labelAnchors).forEach(([id, obj]) => {
+      obj.getWorldPosition(wp);     /* posición mundial tras la rotación del grupo */
+      const ndc = wp.clone().project(cam); /* NDC: -1..1 en x,y; z<1 = visible   */
+      result[id] = {
+        x:     (ndc.x  + 1) / 2 * W,
+        y:     (-ndc.y + 1) / 2 * H,
+        hidden: ndc.z > 1,           /* detrás de la cámara — ocultar           */
+      };
+    });
+    return result;
   }
 
   /* ── Data Particles ────────────────────────────────────── */
@@ -207,5 +241,5 @@ const CamInsideThree = (() => {
     ready = false;
   }
 
-  return { init, setWB, setISP, destroy, isReady: () => ready };
+  return { init, setWB, setISP, destroy, isReady: () => ready, getLabelPositions };
 })();
